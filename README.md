@@ -12,7 +12,7 @@
 
 After retrieving the web application and dispatch class from the provided url. A device redirection is put in play to capture all the outputs coming from the dispatch class.
 
-![Forgery request flow](https://raw.githubusercontent.com/rfns/forgery/master/docs/assets/forgery-requestflow.png)
+![Forgery request flow](https://github.com/rfns/forgery/raw/master/doc/assets/forgery-requestflow.png)
 
 ## Agent
 
