@@ -46,7 +46,7 @@ set sc = agent.Post({
 1, // Automatically outputs the response to the current device.
 )
 
-if $$$ISERR(sc) write "Received a server error: "_$System.OBJ.GetErrorText(sc)
+if $$$ISERR(sc) write "Received a server error: "_$System.Status.GetErrorText(sc)
 return $$$OK
 ```
 
