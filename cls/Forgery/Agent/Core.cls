@@ -5,6 +5,8 @@ Property Cache As %String [ Private ];
 
 Property Namespace As %String [ Private ];
 
+Property CookiesJar As %String [ MultiDimensional ];
+
 Method %OnNew() As %Status
 {
   set ..Namespace = $namespace
@@ -27,7 +29,7 @@ Method Request(settings As %DynamicObject, response As %Stream.Object, outputToD
   if '$isobject(settings.cookies) set settings.cookies = {}
   
   set settings = {
-    "url": (settings.url), 
+    "url": ($zconvert(settings.url, "I", "URL")), 
     "method": (settings.method), 
     "data": (settings.data),
     "headers": (settings.headers),
@@ -49,15 +51,18 @@ Method Forge(settings As %DynamicObject, response As %Stream.Object = "") As %St
   set fromNamespace = ..Namespace
   set str = ""
   
+  merge cookiesJar = i%CookiesJar
+  
+  set %request = ##class(Forgery.Request).CreateFromSettings(settings, .cookiesJar)
   set %session = ##class(%CSP.Session).%New(-1, 0)
-  set %response = ##class(%CSP.Response).%New()
-  set %request = ##class(Forgery.Request).CreateFromSettings(settings) 
+  set %response = ##class(%CSP.Response).%New()  
       
   try {
     set appInfo = ..GetApplicationInfoFromUrl(%request.URL)
     set %request.Application = appInfo.AppUrl
     if $extract(%request.URL) '= "/" set %request.URL = "/"_%request.URL
     $$$ThrowOnError(##class(Forgery.OutputCapturer).Capture(appInfo.DispatchClass, %request.URL, settings.method, .response))
+    do PutReceivedCookiesIntoJar
   } catch ex {    
     set sc = ex.AsStatus()
   }
@@ -65,6 +70,18 @@ Method Forge(settings As %DynamicObject, response As %Stream.Object = "") As %St
   
   set $namespace = fromNamespace
   return sc
+  
+PutReceivedCookiesIntoJar
+  set index = ""
+  for {
+    set index = $order(%response.Cookies(index))
+    quit:index=""
+    
+    set name = %response.Cookies(index, "n")
+    set value = %response.Cookies(index, "v")
+    
+    set i%CookiesJar(name, index) = value   
+  }
 }
 
 Method GetApplicationInfoFromUrl(url As %String) As %DynamicObject [ Private ]
@@ -110,6 +127,12 @@ ListToJSON(urlIndex)
     "Path": ($lg($$$APPCACHE, urlIndex + 3)),
     "AppUrl": ($lg($$$APPCACHE, urlIndex + 4))
   }
+}
+
+ClassMethod ClearCookies() As %Status
+{
+  set i%CookiesJar = ""
+  return $$$OK
 }
 
 }

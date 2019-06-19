@@ -83,6 +83,11 @@
 <Private>1</Private>
 </Property>
 
+<Property name="CookiesJar">
+<Type>%String</Type>
+<MultiDimensional>1</MultiDimensional>
+</Property>
+
 <Method name="%OnNew">
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
@@ -111,7 +116,7 @@
   if '$isobject(settings.cookies) set settings.cookies = {}
   
   set settings = {
-    "url": (settings.url), 
+    "url": ($zconvert(settings.url, "I", "URL")), 
     "method": (settings.method), 
     "data": (settings.data),
     "headers": (settings.headers),
@@ -137,15 +142,18 @@
   set fromNamespace = ..Namespace
   set str = ""
   
+  merge cookiesJar = i%CookiesJar
+  
+  set %request = ##class(Forgery.Request).CreateFromSettings(settings, .cookiesJar)
   set %session = ##class(%CSP.Session).%New(-1, 0)
-  set %response = ##class(%CSP.Response).%New()
-  set %request = ##class(Forgery.Request).CreateFromSettings(settings) 
+  set %response = ##class(%CSP.Response).%New()  
       
   try {
     set appInfo = ..GetApplicationInfoFromUrl(%request.URL)
     set %request.Application = appInfo.AppUrl
     if $extract(%request.URL) '= "/" set %request.URL = "/"_%request.URL
     $$$ThrowOnError(##class(Forgery.OutputCapturer).Capture(appInfo.DispatchClass, %request.URL, settings.method, .response))
+    do PutReceivedCookiesIntoJar
   } catch ex {    
     set sc = ex.AsStatus()
   }
@@ -153,6 +161,18 @@
   
   set $namespace = fromNamespace
   return sc
+  
+PutReceivedCookiesIntoJar
+  set index = ""
+  for {
+    set index = $order(%response.Cookies(index))
+    quit:index=""
+    
+    set name = %response.Cookies(index, "n")
+    set value = %response.Cookies(index, "v")
+    
+    set i%CookiesJar(name, index) = value   
+  }
 ]]></Implementation>
 </Method>
 
@@ -204,6 +224,15 @@ ListToJSON(urlIndex)
   }
 ]]></Implementation>
 </Method>
+
+<Method name="ClearCookies">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+  set i%CookiesJar = ""
+  return $$$OK
+]]></Implementation>
+</Method>
 </Class>
 
 
@@ -220,23 +249,23 @@ ListToJSON(urlIndex)
 <Implementation><![CDATA[
 
   new %frontier
-  
-  if ##class(%Dictionary.CompiledClass).%ExistsId("Frontier.Context") {  
+
+  if ##class(%Dictionary.CompiledClass).%ExistsId("Frontier.Context") {
     set %frontier = ##class(Frontier.Context).%New(%session, %request, %response)
   }
 
   new oldMnemonic, alreadyRedirected, sc
-  
+
   set sc = $$$OK
   set isRedirected = 0
-  
+
   set str = ##class(%Stream.GlobalCharacter).%New()
   set alreadyRedirected = ##class(%Device).ReDirectIO()
   set oldMnemonic = "^"_##class(%Device).GetMnemonicRoutine()
-  set initIO = $io   
-  
-  try {   
-    use $io::("^"_$zname)    
+  set initIO = $io
+
+  try {
+    use $io::("^"_$zname)
     do ##class(%Device).ReDirectIO(1)
     set isRedirected = 1
     set sc = $classmethod(dispatcherClass, "DispatchRequest", url, httpMethod)
@@ -244,18 +273,18 @@ ListToJSON(urlIndex)
   } catch ex {
     set str = ""
     set sc = ex.AsStatus()
-  }     
-  
+  }
+
   if oldMnemonic '= "" {
     use initIO::(oldMnemonic)
   } else {
     use oldMnemonic
   }
-  
-  do ##class(%Device).ReDirectIO(alreadyRedirected) 
-      
+
+  do ##class(%Device).ReDirectIO(alreadyRedirected)
+
   return sc
-  
+
 wstr(s) Do str.Write(s) Quit
 wchr(a) Do str.Write($char(a)) Quit
 wnl Do str.Write($char(13,10)) Quit
@@ -286,6 +315,11 @@ rchr(time) Quit ""
 
 <Property name="Content">
 <Type>%CSP.Stream</Type>
+</Property>
+
+<Property name="Cookies">
+<Type>%String</Type>
+<MultiDimensional>1</MultiDimensional>
 </Property>
 
 <Property name="MimeData">
@@ -334,22 +368,25 @@ rchr(time) Quit ""
 </Method>
 
 <Method name="CreateFromSettings">
+<Internal>1</Internal>
 <ClassMethod>1</ClassMethod>
-<FormalSpec>settings:%DynamicObject</FormalSpec>
+<FormalSpec><![CDATA[settings:%DynamicObject,&cookiesJar:%String=""]]></FormalSpec>
 <ReturnType>Forgery.Request</ReturnType>
 <Implementation><![CDATA[
   set urlWithoutQueryParams = $piece(settings.url, "?")
-  set request = ..%New(urlWithoutQueryParams, settings.method) 
+  set request = ..%New(urlWithoutQueryParams, settings.method)
   
+  if $data(cookiesJar) merge request.Cookies = cookiesJar
+
   do AppendToRequest("headers", settings.headers)
   do AppendToRequest("cookies", settings.cookies)
-  
+
   if settings.%IsDefined("headers") {
     if settings.headers.%IsDefined("Authorization") {
       set request.Authorization = settings.headers.Authorization
     }
   }
-  
+
   if settings.url [ "?" {
     set queryParts = $replace(settings.url, "?", "&")
     for i=2:1:$length(queryParts, "&") {
@@ -358,15 +395,15 @@ rchr(time) Quit ""
       set qv = $piece(qp, "=", 2)
       do request.Insert(qn, qv)
     }
-  } 
-  
+  }
+
   if settings.%IsDefined("data") && $isobject(settings.data) {
-    if settings.headers.%Get("Content-Type") [ "multipart/form-data" { 
-      do AppendToRequest("mimedata", settings.data) 
-    } elseif settings.data.%IsA("%Stream.Object") { 
+    if settings.headers.%Get("Content-Type") [ "multipart/form-data" {
+      do AppendToRequest("mimedata", settings.data)
+    } elseif settings.data.%IsA("%Stream.Object") {
       if settings.data.IsCharacter() set content = ##class(%CSP.CharacterStream).%New()
       else  set content = ##class(%CSP.BinaryStream).%New()
-      do content.CopyFrom(settings.data)  
+      do content.CopyFrom(settings.data)
     } elseif settings.data.%Extends("%DynamicAbstractObject") {
       set content = ##class(%CSP.CharacterStream).%New()
       do settings.data.%ToJSON(.content)
@@ -378,13 +415,13 @@ rchr(time) Quit ""
       do AppendToRequest("queryparams", settings.data)
     }
   }
-  
+
   return request
-  
+
 AppendToRequest(settingName, settingData, parentKey = "")
   if '$isobject(settingData) quit
-  set iterator = settingData.%GetIterator()   
-  
+  set iterator = settingData.%GetIterator()
+
   while iterator.%GetNext(.key, .val) {
     set appendToKeyName = key
     if $isobject(val) {
@@ -442,34 +479,34 @@ AppendToRequest(settingName, settingData, parentKey = "")
 <Private>1</Private>
 <Implementation><![CDATA[
   do ##class(%Net.URLParser).Parse(..URL, .components)
-  do ParseQueryString(components("query"), .data)  
-  
+  do ParseQueryString(components("query"), .data)
+
   merge i%Data = data
-      
+
   set i%CgiEnvs("REQUEST_METHOD") = $$$ucase(..Method)
   set i%CgiEnvs("REQUEST_SCHEME") = "http"
-  set i%CgiEnvs("REQUEST_URI") = components("path")  
+  set i%CgiEnvs("REQUEST_URI") = components("path")
   set i%CgiEnvs("SERVER_NAME") = "localhost"
-  set i%CgiEnvs("SERVER_PORT") = 57772  
-  set i%CgiEnvs("SERVER_PROTOCOL") = "HTTP/1.1"  
-  
+  set i%CgiEnvs("SERVER_PORT") = 57772
+  set i%CgiEnvs("SERVER_PROTOCOL") = "HTTP/1.1"
+
 ParseQueryString(qs, data)
   if qs = "" quit
-  
+
   set qp = $lfs(qs, "&")
-  
+
   for i=1:1:$ll(qp) {
     set key = $piece($lg(qp, i), "=", 1)
     set value = $piece($lg(qp, i), "=", 2)
     if key '= "" && (value '= "") set data(key, 1) = value
-  }  
+  }
   quit
 ]]></Implementation>
 </Method>
 
 <UDLText name="T">
 <Content><![CDATA[
-// Most of the methods below are a copy from %CSP.Request, since we need to keep 
+// Most of the methods below are a copy from %CSP.Request, since we need to keep
 
 ]]></Content>
 </UDLText>
@@ -560,7 +597,7 @@ Returns the count of multipart MIME streams with this name.</Description>
 <ReturnType>%Integer</ReturnType>
 <Implementation><![CDATA[
   #Dim count,i
-  
+
   Quit:'$data(i%MimeData(name)) 0
   Set count=0 Set i="" For  Set i=$order(i%MimeData(name,i)) Quit:i=""  Set count=count+1
   Quit count
@@ -697,7 +734,7 @@ was defined and false if it was never defined.</Description>
 <Implementation><![CDATA[
   if $$$lcase(key) = "content-type" set ..ContentType = value
   if $$$lcase(key) = "content-length" set ..ContentLength = value
-  
+
   do ..SetCgiEnv("HTTP_"_$$$ucase($replace(key, "-", "_")), value)
   return $$$OK
 ]]></Implementation>
@@ -779,23 +816,33 @@ was defined and false if it was never defined.</Description>
 </Class>
 
 
-<Project name="forgery" LastModified="2018-08-29 09:07:36.446278" Target="##class(Forgery.Agent).TestGETFile()" TargetType="0" HttpServer="http://localhost:57772">
+<Class name="Forgery.Test">
+<Super>%Persistent</Super>
+<TimeCreated>65108,41689.954367</TimeCreated>
+
+<Storage name="Default">
+<Type>%Library.CacheStorage</Type>
+<DataLocation>^Forgery.TestD</DataLocation>
+<DefaultData>TestDefaultData</DefaultData>
+<IdLocation>^Forgery.TestD</IdLocation>
+<IndexLocation>^Forgery.TestI</IndexLocation>
+<StreamLocation>^Forgery.TestS</StreamLocation>
+<Data name="TestDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+
+
+<Project name="forgery" LastModified="2019-05-22 10:16:43.58917" TargetType="0" HttpServer="http://localhost:57772">
   <Items>
     <ProjectItem name="Forgery.Agent" type="CLS"></ProjectItem>
     <ProjectItem name="Forgery.Agent.Core" type="CLS"></ProjectItem>
     <ProjectItem name="Forgery.OutputCapturer" type="CLS"></ProjectItem>
     <ProjectItem name="Forgery.Request" type="CLS"></ProjectItem>
+    <ProjectItem name="Forgery.Test" type="CLS"></ProjectItem>
   </Items>
-  <BreakPoints>
-    <BreakPoint Routine="%Library.GlobalStreamAdaptor.CLS" Offset="Write+10"></BreakPoint>
-    <BreakPoint Routine="%Library.GlobalStreamAdaptor.CLS" Offset="Write+2"></BreakPoint>
-    <BreakPoint Routine="%Stream.FileCharacter.CLS" Offset="OpenDevice+1"></BreakPoint>
-    <BreakPoint Routine="%Stream.Object.CLS" Offset="CopyFrom+1"></BreakPoint>
-    <BreakPoint Routine="%Stream.Object.CLS" Offset="CopyFromAndSave+1"></BreakPoint>
-    <BreakPoint Routine="Frontier.Files.CLS" Offset="Serve+2"></BreakPoint>
-    <BreakPoint Routine="Frontier.Files.CLS" Offset="Serve+61"></BreakPoint>
-    <BreakPoint Routine="Frontier.Router.CLS" Offset="Page+1"></BreakPoint>
-    <BreakPoint Routine="Frontier.UnitTest.Router.CLS" Offset="TestGETStaticFile+2"></BreakPoint>
-  </BreakPoints>
 </Project>
 </Export>

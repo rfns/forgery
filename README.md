@@ -16,7 +16,7 @@ After retrieving the web application and dispatch class from the provided url. A
 
 ## Agent
 
-The Agent is responsible for mimicking a client that executes a request to the server. It's represented by the class `Forgery.Agent`, that's composed by six shortcut methods:
+The Agent is responsible for mimicking a client that executes a request to the server. It's represented by the class `Forgery.Agent` which is composed by six shortcut methods:
 
 * Post
 * Put
@@ -50,13 +50,47 @@ if $$$ISERR(sc) write "Received a server error: "_$System.OBJ.GetErrorText(sc)
 return $$$OK
 ```
 
+# Troubleshooting
+
+### _I provided a URL but it's not finding my dispatch class?_
+
+Since you're not actually hitting your web server, you only need to provide the path that
+ressembles your web application's name/path onwards. Do not provide the hostname, protocol or any path that is before what you defined for your web application.
+
+### _My application uses custom cookies and I tried setting them using the Set-Cookies header but to no avail?_
+
+1. Since multiple cookies with the same name can be set, I decided to dedicate a setting for it, By using the `cookies` setting. Which receives a key-value object or an array of values for each named key.
+
+2. By reusing the agent for subsequent request, this way the previous request will have set the cookie, which is good to simulate working with _httpOnly_ cookies.
+
+If you need to set cookies don't use the `Set-Cookies`, because the dispatch class won't know from where to read it.
+
+### _What if my application uses a token-based approach?_
+
+You can simulate authenticated request by providing an `Authorization` header inside the `headers` object. e.g.:
+
+### _I want to try sending a file, but I have no idea from where to begin!_
+
+You can simulate FormData requests by using the `mimedata` setting. Just pass out a file stream to a key-valued object and you'll be done. e.g.:
+
+```
+{
+  "mimedata": {
+    "my_file_key": (myFileStream)
+  }
+}
+
+```
+
+If you need to repeat the name, you can provide a `%DynamicArray` of streams for that name instead.
+
 # Known issues
 
-The following situations are known issues and can be caused due to the device redirection. If you have any ideas on how to fix it, please let me know:
+The following situations are known issues. If you have any ideas on how to fix it, please let me know:
 
-* Method handling requests that attempts to serialize using `do obj.%ToJSON` will fail to render the serialized object.
+* Methods that call APIs to generate files (like handling uploads) will mostly like fail, this is due to the redirection required to capture the content being written, which in turn conflicts with the device change required to write files. The current workaround is to ignore the file generation and check if the request handler method completed without issues.
 
-* Methods that call APIs to generate files (like handling uploads) will mostly like fail. The current workaround is to ignore the file generation and check if the request handler method completed without issues.
+* Some dispatch classes like the one that exposes the Atelier API will result into an odd response: they'll mix the success and error objects. I'm still trying to figure what is causing that.
 
 ## CONTRIBUTING
 
@@ -65,6 +99,3 @@ If you want to contribute with this project. Please read the [CONTRIBUTING](http
 ## LICENSE
 
 [MIT](https://github.com/rfns/forgery/blob/master/LICENSE.md).
-
-
-

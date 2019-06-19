@@ -9,6 +9,8 @@ Property Application As %String;
 
 Property Content As %CSP.Stream;
 
+Property Cookies As %String [ MultiDimensional ];
+
 Property MimeData As %String [ MultiDimensional ];
 
 Property ContentType As %String;
@@ -32,20 +34,22 @@ Method %OnNew(url As %String, method As %String = "GET") As %Status [ Private ]
   return $$$OK
 }
 
-ClassMethod CreateFromSettings(settings As %DynamicObject) As Forgery.Request
+ClassMethod CreateFromSettings(settings As %DynamicObject, ByRef cookiesJar As %String = "") As Forgery.Request [ Internal ]
 {
   set urlWithoutQueryParams = $piece(settings.url, "?")
-  set request = ..%New(urlWithoutQueryParams, settings.method) 
+  set request = ..%New(urlWithoutQueryParams, settings.method)
   
+  if $data(cookiesJar) merge request.Cookies = cookiesJar
+
   do AppendToRequest("headers", settings.headers)
   do AppendToRequest("cookies", settings.cookies)
-  
+
   if settings.%IsDefined("headers") {
     if settings.headers.%IsDefined("Authorization") {
       set request.Authorization = settings.headers.Authorization
     }
   }
-  
+
   if settings.url [ "?" {
     set queryParts = $replace(settings.url, "?", "&")
     for i=2:1:$length(queryParts, "&") {
@@ -54,15 +58,15 @@ ClassMethod CreateFromSettings(settings As %DynamicObject) As Forgery.Request
       set qv = $piece(qp, "=", 2)
       do request.Insert(qn, qv)
     }
-  } 
-  
+  }
+
   if settings.%IsDefined("data") && $isobject(settings.data) {
-    if settings.headers.%Get("Content-Type") [ "multipart/form-data" { 
-      do AppendToRequest("mimedata", settings.data) 
-    } elseif settings.data.%IsA("%Stream.Object") { 
+    if settings.headers.%Get("Content-Type") [ "multipart/form-data" {
+      do AppendToRequest("mimedata", settings.data)
+    } elseif settings.data.%IsA("%Stream.Object") {
       if settings.data.IsCharacter() set content = ##class(%CSP.CharacterStream).%New()
       else  set content = ##class(%CSP.BinaryStream).%New()
-      do content.CopyFrom(settings.data)  
+      do content.CopyFrom(settings.data)
     } elseif settings.data.%Extends("%DynamicAbstractObject") {
       set content = ##class(%CSP.CharacterStream).%New()
       do settings.data.%ToJSON(.content)
@@ -74,13 +78,13 @@ ClassMethod CreateFromSettings(settings As %DynamicObject) As Forgery.Request
       do AppendToRequest("queryparams", settings.data)
     }
   }
-  
+
   return request
-  
+
 AppendToRequest(settingName, settingData, parentKey = "")
   if '$isobject(settingData) quit
-  set iterator = settingData.%GetIterator()   
-  
+  set iterator = settingData.%GetIterator()
+
   while iterator.%GetNext(.key, .val) {
     set appendToKeyName = key
     if $isobject(val) {
@@ -124,31 +128,31 @@ Method ContentLengthSet(value As %String) As %Status [ Private ]
 Method LoadDefaultCgiEnvs() [ Private ]
 {
   do ##class(%Net.URLParser).Parse(..URL, .components)
-  do ParseQueryString(components("query"), .data)  
-  
+  do ParseQueryString(components("query"), .data)
+
   merge i%Data = data
-      
+
   set i%CgiEnvs("REQUEST_METHOD") = $$$ucase(..Method)
   set i%CgiEnvs("REQUEST_SCHEME") = "http"
-  set i%CgiEnvs("REQUEST_URI") = components("path")  
+  set i%CgiEnvs("REQUEST_URI") = components("path")
   set i%CgiEnvs("SERVER_NAME") = "localhost"
-  set i%CgiEnvs("SERVER_PORT") = 57772  
-  set i%CgiEnvs("SERVER_PROTOCOL") = "HTTP/1.1"  
-  
+  set i%CgiEnvs("SERVER_PORT") = 57772
+  set i%CgiEnvs("SERVER_PROTOCOL") = "HTTP/1.1"
+
 ParseQueryString(qs, data)
   if qs = "" quit
-  
+
   set qp = $lfs(qs, "&")
-  
+
   for i=1:1:$ll(qp) {
     set key = $piece($lg(qp, i), "=", 1)
     set value = $piece($lg(qp, i), "=", 2)
     if key '= "" && (value '= "") set data(key, 1) = value
-  }  
+  }
   quit
 }
 
-// Most of the methods below are a copy from %CSP.Request, since we need to keep 
+// Most of the methods below are a copy from %CSP.Request, since we need to keep
 
 // these methods working as they can be called by the application.
 
@@ -197,7 +201,7 @@ $data(i%MimeData(name,index))
 Method CountMimeData(name As %String) As %Integer [ Final ]
 {
   #Dim count,i
-  
+
   Quit:'$data(i%MimeData(name)) 0
   Set count=0 Set i="" For  Set i=$order(i%MimeData(name,i)) Quit:i=""  Set count=count+1
   Quit count
@@ -287,7 +291,7 @@ Method SetHeader(key As %String, value As %String) As %Status
 {
   if $$$lcase(key) = "content-type" set ..ContentType = value
   if $$$lcase(key) = "content-length" set ..ContentLength = value
-  
+
   do ..SetCgiEnv("HTTP_"_$$$ucase($replace(key, "-", "_")), value)
   return $$$OK
 }
