@@ -12,7 +12,7 @@
 
 After retrieving the web application and dispatch class from the provided url. A device redirection is put in play to capture all the outputs coming from the dispatch class. The diagram below describes how the mimicked request is transferred to the actual dispatcher.
 
-![Forgery request flow](https://github.com/rfns/forgery/raw/master/docs/assets/forgery-requestflow.png)
+![Forgery request flow](https://github.com/rfns/forgery/blob/master/docs/assets/forgery-requestflow.jpg?raw=true)
 
 ## Agent
 
