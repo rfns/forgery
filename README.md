@@ -10,9 +10,9 @@
 
 # How it works
 
-After retrieving the web application and dispatch class from the provided url. A device redirection is put in play to capture all the outputs coming from the dispatch class.
+After retrieving the web application and dispatch class from the provided url. A device redirection is put in play to capture all the outputs coming from the dispatch class. The diagram below describes how the mimicked request is transferred to the actual dispatcher.
 
-![Forgery request flow](https://raw.githubusercontent.com/rfns/forgery/master/docs/assets/forgery-requestflow.png)
+![Forgery request flow](https://github.com/rfns/forgery/raw/master/doc/assets/forgery-requestflow.png)
 
 ## Agent
 
@@ -46,7 +46,7 @@ set sc = agent.Post({
 1, // Automatically outputs the response to the current device.
 )
 
-if $$$ISERR(sc) write "Received a server error: "_$System.OBJ.GetErrorText(sc)
+if $$$ISERR(sc) write "Received a server error: "_$System.Status.GetErrorText(sc)
 return $$$OK
 ```
 
