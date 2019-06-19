@@ -4,7 +4,7 @@
 
 # Forgery
 
-*Forgery* is a server-side utility that allows executing simulated HTTP request by __forging__ calls to Frontier applications. This makes *Forgery* ideal for using together with test suites that need to call the API via HTTP but could face issues with license usage and its grace period.
+*Forgery* is a server-side utility that allows executing simulated HTTP request by __forging__ calls to REST applications. This makes *Forgery* ideal for using together with test suites that need to call the API via HTTP but could face issues with license usage and its grace period.
 
 > NOTE: This is not a tool used to bypass license limits, but instead it's simply an auxiliary tool for facilitating authoring request tests and debugging them without hitting the network layer. Because let's face it, debugging request is actually a pain.
 
