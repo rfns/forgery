@@ -6,7 +6,7 @@
 
 *Forgery* is a server-side utility that allows executing simulated HTTP request by __forging__ calls to REST applications. This makes *Forgery* ideal for using together with test suites that need to call the API via HTTP but could face issues with license usage and its grace period.
 
-> NOTE: This is not a tool used to bypass license limits, but instead it's simply an auxiliary tool for facilitating authoring request tests and debugging them without hitting the network layer. Because let's face it, debugging request is actually a pain.
+> NOTE: This is not a tool used to bypass license limits, but instead it's simply an auxiliary tool for facilitating authoring request tests and debugging them without hitting the network layer. Because let's face it, debugging requests is actually a pain.
 
 # How it works
 
@@ -59,7 +59,9 @@ ressembles your web application's name/path onwards. Do not provide the hostname
 
 ### _My application uses custom cookies and I tried setting them using the Set-Cookies header but to no avail?_
 
-1. Since multiple cookies with the same name can be set, I decided to dedicate a setting for it, By using the `cookies` setting. Which receives a key-value object or an array of values for each named key.
+There are two ways of doing this:
+
+1. Since multiple cookies with the same name can be set, I decided to dedicate a setting for it: by using the `cookies` setting, which receives a key-value object or an array of values for each named key.
 
 2. By reusing the agent for subsequent request, this way the previous request will have set the cookie, which is good to simulate working with _httpOnly_ cookies.
 
@@ -67,7 +69,7 @@ If you need to set cookies don't use the `Set-Cookies`, because the dispatch cla
 
 ### _What if my application uses a token-based approach?_
 
-You can simulate authenticated request by providing an `Authorization` header inside the `headers` object. e.g.:
+You can simulate authenticated request by providing an `Authorization` header inside the `headers` object.
 
 ### _I want to try sending a file, but I have no idea from where to begin!_
 
