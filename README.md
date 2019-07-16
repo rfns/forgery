@@ -31,7 +31,7 @@ Each method accepts a configuration object that's a subset of settings from the 
 
 Calling a resource that replies to POST requests.
 
-```
+```objectscript
 set agent = ##class(Forgery.Agent).%New()
 set sc = agent.Post({
   "url": "api/forgery/samples/echo",
