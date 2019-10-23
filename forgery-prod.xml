@@ -131,7 +131,7 @@
 </Method>
 
 <Method name="Forge">
-<FormalSpec>settings:%DynamicObject,response:%Stream.Object=""</FormalSpec>
+<FormalSpec>settings:%DynamicObject,response:%Stream.Object="",outputToDevice:%Boolean=0</FormalSpec>
 <Private>1</Private>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
@@ -261,12 +261,12 @@ ListToJSON(urlIndex)
 
   set str = ##class(%Stream.GlobalCharacter).%New()
   set alreadyRedirected = ##class(%Device).ReDirectIO()
-  set oldMnemonic = "^"_##class(%Device).GetMnemonicRoutine()
+  set oldMnemonic = ##class(%Device).GetMnemonicRoutine()
   set initIO = $io
 
   try {
-    use $io::("^"_$zname)
     do ##class(%Device).ReDirectIO(1)
+    use $io::("^"_$zname)
     set isRedirected = 1
     set sc = $classmethod(dispatcherClass, "DispatchRequest", url, httpMethod)
     do str.Rewind()
@@ -276,7 +276,7 @@ ListToJSON(urlIndex)
   }
 
   if oldMnemonic '= "" {
-    use initIO::(oldMnemonic)
+    use initIO::("^"_oldMnemonic)
   } else {
     use oldMnemonic
   }
@@ -434,7 +434,7 @@ AppendToRequest(settingName, settingData, parentKey = "")
       set appendToKeyName = parentKey
     }
     if settingName = "headers" { do request.SetHeader(appendToKeyName, val) }
-    elseif settingName = "cookies" { do request.SetCookie(appendToKeyName, val) }
+    elseif settingName = "cookies" { do request.InsertCookie(appendToKeyName, val) }
     elseif settingName = "mimedata" { do request.InsertMimeData(appendToKeyName, val) }
     elseif settingName = "queryparams" { do request.Insert(appendToKeyName, val) }
   }
@@ -813,25 +813,5 @@ was defined and false if it was never defined.</Description>
   Quit i%Data(name,index)
 ]]></Implementation>
 </Method>
-</Class>
-
-
-<Class name="Forgery.Test">
-<Super>%Persistent</Super>
-<TimeCreated>65108,41689.954367</TimeCreated>
-
-<Storage name="Default">
-<Type>%Library.CacheStorage</Type>
-<DataLocation>^Forgery.TestD</DataLocation>
-<DefaultData>TestDefaultData</DefaultData>
-<IdLocation>^Forgery.TestD</IdLocation>
-<IndexLocation>^Forgery.TestI</IndexLocation>
-<StreamLocation>^Forgery.TestS</StreamLocation>
-<Data name="TestDefaultData">
-<Value name="1">
-<Value>%%CLASSNAME</Value>
-</Value>
-</Data>
-</Storage>
 </Class>
 </Export>
