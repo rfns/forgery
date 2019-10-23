@@ -97,7 +97,7 @@ AppendToRequest(settingName, settingData, parentKey = "")
       set appendToKeyName = parentKey
     }
     if settingName = "headers" { do request.SetHeader(appendToKeyName, val) }
-    elseif settingName = "cookies" { do request.SetCookie(appendToKeyName, val) }
+    elseif settingName = "cookies" { do request.InsertCookie(appendToKeyName, val) }
     elseif settingName = "mimedata" { do request.InsertMimeData(appendToKeyName, val) }
     elseif settingName = "queryparams" { do request.Insert(appendToKeyName, val) }
   }
