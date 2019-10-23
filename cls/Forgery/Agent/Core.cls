@@ -42,7 +42,7 @@ Method Request(settings As %DynamicObject, response As %Stream.Object, outputToD
   return $$$OK
 }
 
-Method Forge(settings As %DynamicObject, response As %Stream.Object = "") As %Status [ Private ]
+Method Forge(settings As %DynamicObject, response As %Stream.Object = "", outputToDevice As %Boolean = 0) As %Status [ Private ]
 {
   kill %request, %session, %response
   new %request, %session, %response  
