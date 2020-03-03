@@ -7,10 +7,18 @@ Property Namespace As %String [ Private ];
 
 Property CookiesJar As %String [ MultiDimensional ];
 
-Method %OnNew() As %Status
+Property BaseURL As %String [ Private ];
+
+Property DefaultHeaders As %DynamicObject [ Private ];
+
+Property LastResponse As %CSP.Response [ Private ];
+
+Method %OnNew(baseURL As %String = "", defaultHeaders As %DynamicObject = {{}}) As %Status
 {
   set ..Namespace = $namespace
   set ..Cache = "^|"""_..Namespace_"""|Forgery.Agent"  
+  set ..BaseURL = baseURL
+  set ..DefaultHeaders = defaultHeaders
   return $$$OK
 }
 
@@ -28,15 +36,20 @@ Method Request(settings As %DynamicObject, response As %Stream.Object, outputToD
   if '$isobject(settings.headers) set settings.headers = {}
   if '$isobject(settings.cookies) set settings.cookies = {}
   
-  set settings = {
-    "url": ($zconvert(settings.url, "I", "URL")), 
+  set finalSettings = {
+    "url": ($zconvert(..BaseURL _ settings.url, "I", "URL")), 
     "method": (settings.method), 
     "data": (settings.data),
-    "headers": (settings.headers),
+    "headers": (..DefaultHeaders),
     "cookies": (settings.cookies)
   }
+
+  set iter = settings.headers.%GetIterator()
+  while iter.%GetNext(.key,.value) {
+    set $Property(finalSettings.headers,key) = value
+  }
   
-  $$$QuitOnError(..Forge(settings, .response))
+  $$$QuitOnError(..Forge(finalSettings, .response))
   
   if outputToDevice = 1 do response.OutputToDevice()  
   return $$$OK
@@ -66,6 +79,7 @@ Method Forge(settings As %DynamicObject, response As %Stream.Object = "", output
   } catch ex {    
     set sc = ex.AsStatus()
   }
+  set ..LastResponse = %response
   kill %request, %session, %response
   
   set $namespace = fromNamespace
