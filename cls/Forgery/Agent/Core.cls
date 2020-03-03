@@ -32,21 +32,29 @@ Method Request(settings As %DynamicObject, response As %Stream.Object, outputToD
 {
   set sc = $$$OK
   
-  if '$isobject(settings.data) set settings.data = {}
   if '$isobject(settings.headers) set settings.headers = {}
   if '$isobject(settings.cookies) set settings.cookies = {}
   
   set finalSettings = {
     "url": ($zconvert(..BaseURL _ settings.url, "I", "URL")), 
-    "method": (settings.method), 
-    "data": (settings.data),
+    "method": (settings.method),
     "headers": (..DefaultHeaders),
     "cookies": (settings.cookies)
   }
 
+  if settings.%IsDefined("data") {
+    // Don't set {} as data if not defined. (Otherwise, would add content even on GET requests.)
+    set finalSettings.data = settings.data
+  }
+
   set iter = settings.headers.%GetIterator()
   while iter.%GetNext(.key,.value) {
-    set $Property(finalSettings.headers,key) = value
+    set type = settings.headers.%GetTypeOf(key)
+    if (type = "null") {
+      do finalSettings.%Remove(key)
+    } else {
+      do finalSettings.%Set(key,value,type)
+    }
   }
   
   $$$QuitOnError(..Forge(finalSettings, .response))
