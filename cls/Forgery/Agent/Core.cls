@@ -129,11 +129,10 @@ ListToJSON(urlIndex)
   }
 }
 
-ClassMethod ClearCookies() As %Status
+Method ClearCookies() As %Status
 {
   set i%CookiesJar = ""
   return $$$OK
 }
 
 }
-
