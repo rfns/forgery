@@ -51,9 +51,9 @@ Method Request(settings As %DynamicObject, response As %Stream.Object, outputToD
   while iter.%GetNext(.key,.value) {
     set type = settings.headers.%GetTypeOf(key)
     if (type = "null") {
-      do finalSettings.%Remove(key)
+      do finalSettings.headers.%Remove(key)
     } else {
-      do finalSettings.%Set(key,value,type)
+      do finalSettings.headers.%Set(key,value,type)
     }
   }
   
