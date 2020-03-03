@@ -38,13 +38,19 @@ Method Request(settings As %DynamicObject, response As %Stream.Object, outputToD
   set finalSettings = {
     "url": ($zconvert(..BaseURL _ settings.url, "I", "URL")), 
     "method": (settings.method),
-    "headers": (..DefaultHeaders),
+    "headers": {},
     "cookies": (settings.cookies)
   }
 
   if settings.%IsDefined("data") {
     // Don't set {} as data if not defined. (Otherwise, would add content even on GET requests.)
     set finalSettings.data = settings.data
+  }
+
+  set iter = ..DefaultHeaders.%GetIterator()
+  while iter.%GetNext(.key,.value) {
+    set type = ..DefaultHeaders.%GetTypeOf(key)
+    do finalSettings.headers.%Set(key,value,type)
   }
 
   set iter = settings.headers.%GetIterator()
