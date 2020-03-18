@@ -53,6 +53,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
       with:
         upload_url: ${{ steps.release-asset-metadata.outputs.UPLOAD_URL }}
-        asset_path: app/fogery.xml
+        asset_path: app/forgery.xml
         asset_name: forgery-${{ steps.parse-tag.outputs.VERSION }}.xml
         asset_content_type: application/xml
