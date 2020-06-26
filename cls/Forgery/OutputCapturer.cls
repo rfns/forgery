@@ -42,7 +42,7 @@ ClassMethod Capture(dispatcherClass As %String, url As %String, httpMethod As %S
   if oldMnemonic '= "" {
     use initIO::("^"_oldMnemonic)
   } else {
-    use oldMnemonic
+    use initIO::""
   }
 
   do ##class(%Device).ReDirectIO(alreadyRedirected)
