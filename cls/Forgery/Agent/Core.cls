@@ -36,15 +36,13 @@ Method %OnClose() As %Status
 }
 
 Method NormalizeSettings(settings As %String) As %DynamicObject [ Private ]
-{
- 
+{ 
   set finalSettings = {
     "url": ($zconvert(..BaseURL_settings.url, "I", "URL")), 
     "method": (settings.method),
     "cookies": (settings.cookies),
     "headers": (settings.headers)
-  }
-  
+
   if '$isobject(finalSettings.headers) || 'finalSettings.headers.%IsA("%DynamicObject") {
     set finalSettings.headers = {}
   }
@@ -183,4 +181,3 @@ Method GetLastResponse() As %Stream.Object
 }
 
 }
-
