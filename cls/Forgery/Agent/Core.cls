@@ -1,16 +1,31 @@
 Class Forgery.Agent.Core Extends %RegisteredObject
 {
 
+Property BaseURL As %String [ Private ];
+
+Property DefaultHeaders As %DynamicObject [ Private ];
+
 Property Cache As %String [ Private ];
 
 Property Namespace As %String [ Private ];
 
-Property CookiesJar As %String [ MultiDimensional ];
+Property Jar As Forgery.Agent.CookieJar [ Private ];
 
-Method %OnNew() As %Status
+Property CSPResponse As %CSP.Response [ Private ];
+
+Property Response As %Stream.Object [ Private ];
+
+Method %OnNew(defaultSettings As %DynamicObject = {{}}) As %Status
 {
+  if $data(defaultSettings) && ('$isobject(defaultSettings) || 'defaultSettings.%IsA("%DynamicObject")) {
+    set defaultSettings = {}
+  }
   set ..Namespace = $namespace
-  set ..Cache = "^|"""_..Namespace_"""|Forgery.Agent"  
+  set ..BaseURL = defaultSettings.baseURL
+  set ..DefaultHeaders = defaultSettings.defaultHeaders
+    
+  set ..Cache = "^|"""_..Namespace_"""|Forgery.Agent"
+  set ..Jar = ##class(Forgery.Agent.CookieJar).%New()   
   return $$$OK
 }
 
@@ -20,23 +35,52 @@ Method %OnClose() As %Status
   return $$$OK
 }
 
-Method Request(settings As %DynamicObject, response As %Stream.Object, outputToDevice As %Boolean = 0) As %Status
+Method NormalizeSettings(settings As %String) As %DynamicObject [ Private ]
 {
-  set sc = $$$OK
-  
-  if '$isobject(settings.data) set settings.data = {}
-  if '$isobject(settings.headers) set settings.headers = {}
-  if '$isobject(settings.cookies) set settings.cookies = {}
-  
-  set settings = {
-    "url": ($zconvert(settings.url, "I", "URL")), 
-    "method": (settings.method), 
-    "data": (settings.data),
-    "headers": (settings.headers),
-    "cookies": (settings.cookies)
+ 
+  set finalSettings = {
+    "url": ($zconvert(..BaseURL_settings.url, "I", "URL")), 
+    "method": (settings.method),
+    "cookies": (settings.cookies),
+    "headers": (settings.headers)
   }
   
-  $$$QuitOnError(..Forge(settings, .response))
+  if '$isobject(finalSettings.headers) || 'finalSettings.headers.%IsA("%DynamicObject") {
+    set finalSettings.headers = {}
+  }
+  
+  if '$isobject(finalSettings.cookies) || finalSettings.headers.%IsA("%DynamicObject") {
+    set finalSettings.cookies = {}
+  }  
+  
+  if $lf($lb("POST", "PATCH", "PUT"), settings.method) && settings.%IsDefined("data") {
+    set finalSettings.data = settings.data
+  }
+  
+  do ..MergeWithDefaultHeaders(finalSettings.headers)  
+  return finalSettings
+}
+
+Method MergeWithDefaultHeaders(requestActionHeaders As %DynamicObject = {{}}) [ Private ]
+{
+  if '$isobject(..DefaultHeaders) return
+  
+  set iterator = ..DefaultHeaders.%GetIterator()
+  
+  while iterator.%GetNext(.key, .value) {   
+    if requestActionHeaders.%IsDefined(key) continue
+    
+    set type = ..DefaultHeaders.%GetTypeOf(key)
+    do requestActionHeaders.%Set(key, value, type)
+  }
+}
+
+Method Request(settings As %DynamicObject, response As %Stream.Object = "", outputToDevice As %Boolean = 0) As %Status
+{
+  set sc = $$$OK  
+  
+  set normalizedSettings = ..NormalizeSettings(settings)
+  $$$QuitOnError(..Forge(normalizedSettings, .response))
   
   if outputToDevice = 1 do response.OutputToDevice()  
   return $$$OK
@@ -46,60 +90,50 @@ Method Forge(settings As %DynamicObject, response As %Stream.Object = "", output
 {
   kill %request, %session, %response
   new %request, %session, %response  
-  
-  // Makes sure that any attempts to change the namespace internally ends up in the original one.
-  set fromNamespace = ..Namespace
-  set str = ""
-  
-  merge cookiesJar = i%CookiesJar
-  
-  set %request = ##class(Forgery.Request).CreateFromSettings(settings, .cookiesJar)
-  set %session = ##class(%CSP.Session).%New(-1, 0)
-  set %response = ##class(%CSP.Response).%New()  
       
-  try {
-    set appInfo = ..GetApplicationInfoFromUrl(%request.URL)
-    set %request.Application = appInfo.AppUrl
-    if $extract(%request.URL) '= "/" set %request.URL = "/"_%request.URL
+  set str = ""  
+  $$$QuitOnError(..GetApplicationInfoFromUrl(settings.url, .appInfo))
+  
+  set %request = ##class(Forgery.Request).CreateFromSettings(settings, appInfo)  
+  set %session = ##class(%CSP.Session).%New(-1, 0)
+  set %response = ##class(%CSP.Response).%New() 
+  
+  do %request.PickFromJar(..Jar)
+      
+  try {    
     $$$ThrowOnError(##class(Forgery.OutputCapturer).Capture(appInfo.DispatchClass, %request.URL, settings.method, .response))
-    do PutReceivedCookiesIntoJar
+    do ..Jar.PutCookiesFromResponse(%response)
   } catch ex {    
     set sc = ex.AsStatus()
   }
+  
+  set ..Response = response
+  set ..CSPResponse = %response
   kill %request, %session, %response
   
-  set $namespace = fromNamespace
+  // Makes sure that any attempts to change the namespace internally ends up in the original one.
+  set $namespace = ..Namespace
   return sc
-  
-PutReceivedCookiesIntoJar
-  set index = ""
-  for {
-    set index = $order(%response.Cookies(index))
-    quit:index=""
-    
-    set name = %response.Cookies(index, "n")
-    set value = %response.Cookies(index, "v")
-    
-    set i%CookiesJar(name, index) = value   
-  }
 }
 
-Method GetApplicationInfoFromUrl(url As %String) As %DynamicObject [ Private ]
+Method GetApplicationInfoFromUrl(url As %String, Output info As Forgery.Agent.ApplicationInfo) As %DynamicObject [ Private ]
 {
    
   #define APPCACHE @i%Cache
   
+  set info = ##class(Forgery.Agent.ApplicationInfo).%New()
+  
   // Cache matches to prevent roundtrips to the %SYS namespace.
   if $data($$$APPCACHE) {
     set index = $lf($$$APPCACHE, url)
-    if index > 0 return $$ListToJSON(index)
-  }
+    if index > 0 return $$ListToObject(index)
+  }   
         
   set $namespace = "%SYS"
     
   set result = {}  
   set name = ""
-  set urlWithInitialSlash = $select($extract(url) '= "/" : "/"_url, 1: url)
+  set urlWithInitialSlash = $select($extract(url) '= "/" : "/"_url, 1: url)  
   
   // Revert the ordering so that longer are considered first, note that the longer the path is higher is similarity with the url.
   set rows = ##class(%SQL.Statement).%ExecDirect(, "SELECT TOP 1 Name, DispatchClass, Path FROM SECURITY.APPLICATIONS WHERE ? %STARTSWITH Name ORDER BY LEN(Name) DESC", urlWithInitialSlash)
@@ -111,28 +145,41 @@ Method GetApplicationInfoFromUrl(url As %String) As %DynamicObject [ Private ]
     set $list($$$APPCACHE, *+1) = rows.%Get("DispatchClass")
     set $list($$$APPCACHE, *+1) = rows.%Get("Path")
     set $list($$$APPCACHE, *+1) = name_$select($extract(name, *) '= "/" : "/", 1: "")
-    set result = $$ListToJSON(index)
+    set info = $$ListToObject(index)
   }
   
   set $namespace = ..Namespace
   
-  if name = "" $$$ThrowStatus($$$ERROR($$$GeneralError, "No application found for url: "_url))
-  
-  return result
-  
-ListToJSON(urlIndex)
-  return {
-    "Name": ($lg($$$APPCACHE, urlIndex + 1)),
-    "DispatchClass": ($lg($$$APPCACHE, urlIndex + 2)),
-    "Path": ($lg($$$APPCACHE, urlIndex + 3)),
-    "AppUrl": ($lg($$$APPCACHE, urlIndex + 4))
+  if name = "" {
+    set info = ""
+    return $$$ERROR($$$GeneralError, "No application found for url: "_url)
   }
+  
+  return $$$OK
+  
+ListToObject(urlIndex)  
+  set info.Name = $lg($$$APPCACHE, urlIndex + 1)
+  set info.DispatchClass = $lg($$$APPCACHE, urlIndex + 2)
+  set info.Path = $lg($$$APPCACHE, urlIndex + 3)
+  set info.AppUrl = $lg($$$APPCACHE, urlIndex + 4)
+  
+  return info
 }
 
-ClassMethod ClearCookies() As %Status
+Method EmptyCookieJar() As %Status
 {
-  set i%CookiesJar = ""
+  do ..Jar.Empty()
   return $$$OK
+}
+
+Method GetLastCSPResponse() As %CSP.Response
+{
+  return ..CSPResponse
+}
+
+Method GetLastResponse() As %Stream.Object
+{
+  return ..Response
 }
 
 }
