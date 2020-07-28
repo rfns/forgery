@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Document name="Forgery.ZPM"><Module>
+  <Name>Forgery</Name>
+  <Version>2.0.0</Version>
+  <Packaging>module</Packaging>
+  <Resource Name="Forgery.PKG" />
+  <LifecycleClass>Module</LifecycleClass>
+</Module>
+</Document></Export>
