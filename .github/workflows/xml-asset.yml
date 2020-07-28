@@ -38,7 +38,7 @@ jobs:
         -v $PWD/iris-ci-xml/ci/Runner.cls:/opt/ci/Runner.cls \
         -e PORT_CONFIGURATION_PROJECTNAME="forgery" \
         -e PORT_CONFIGURATION_LOGLEVEL=1 \
-        -e CI_XML_FLAGS="/exportversion=2016.2" \  
+        -e CI_XML_FLAGS="\/exportversion=2016.2" \  
         rfns/iris-ci:0.5.3
     - name: Retrieve the latest asset upload url
       id: release-asset-metadata
