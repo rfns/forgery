@@ -15,11 +15,22 @@ Property CSPResponse As %CSP.Response [ Private ];
 
 Property Response As %Stream.Object [ Private ];
 
-Method %OnNew(defaultSettings As %DynamicObject = {{}}) As %Status
+Method %OnNew(defaultSettings As %DynamicObject = {{}}, defaultHeaders As %DynamicObject = {{}}) As %Status
 {
-  if $data(defaultSettings) && ('$isobject(defaultSettings) || 'defaultSettings.%IsA("%DynamicObject")) {
-    set defaultSettings = {}
+   
+  if $data(defaultSettings) {
+    if $isobject(defaultSettings) && 'defaultSettings.%IsA("%DynamicObject") {
+      set defaultSettings = {}
+    } elseif '$isobject(defaultSettings) {
+      set defaultSettings = { "baseURL": (defaultSettings) }
+    }
   }
+  
+  if $isobject(defaultHeaders) && defaultHeaders.%IsA("%DynamicObject") && 'defaultSettings.%IsDefined("defaultHeaders") {
+    set defaultSettings.defaultHeaders = defaultHeaders
+  }
+  
+  
   set ..Namespace = $namespace
   set ..BaseURL = defaultSettings.baseURL
   set ..DefaultHeaders = defaultSettings.defaultHeaders
@@ -36,13 +47,15 @@ Method %OnClose() As %Status
 }
 
 Method NormalizeSettings(settings As %String) As %DynamicObject [ Private ]
-{ 
+{
+ 
   set finalSettings = {
     "url": ($zconvert(..BaseURL_settings.url, "I", "URL")), 
     "method": (settings.method),
     "cookies": (settings.cookies),
     "headers": (settings.headers)
-
+  }
+  
   if '$isobject(finalSettings.headers) || 'finalSettings.headers.%IsA("%DynamicObject") {
     set finalSettings.headers = {}
   }
@@ -180,18 +193,5 @@ Method GetLastResponse() As %Stream.Object
   return ..Response
 }
 
-ClassMethod T()
-{
-  set agent = ##class(Forgery.Agent).%New({
-    "baseURL": "/api/frontier/test"    
-  })
-  
-  set sc = agent.Get({ 
-    "url": "/public/file",
-    "cookies": {
-      "OhMy": "ItWorks"
-    }
-  })
 }
 
-}
