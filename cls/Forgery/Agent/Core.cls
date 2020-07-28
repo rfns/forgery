@@ -47,7 +47,7 @@ Method NormalizeSettings(settings As %String) As %DynamicObject [ Private ]
     set finalSettings.headers = {}
   }
   
-  if '$isobject(finalSettings.cookies) || finalSettings.headers.%IsA("%DynamicObject") {
+  if '$isobject(finalSettings.cookies) || 'finalSettings.cookies.%IsA("%DynamicObject") {
     set finalSettings.cookies = {}
   }  
   
@@ -178,6 +178,20 @@ Method GetLastCSPResponse() As %CSP.Response
 Method GetLastResponse() As %Stream.Object
 {
   return ..Response
+}
+
+ClassMethod T()
+{
+  set agent = ##class(Forgery.Agent).%New({
+    "baseURL": "/api/frontier/test"    
+  })
+  
+  set sc = agent.Get({ 
+    "url": "/public/file",
+    "cookies": {
+      "OhMy": "ItWorks"
+    }
+  })
 }
 
 }
