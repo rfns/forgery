@@ -25,7 +25,7 @@ The Agent is responsible for mimicking a client that executes a request to the s
 * Options
 * Head
 
-Each method accepts a configuration object that's a subset of settings from the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
+Each method accepts a configuration that might looks similar to the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
 
 # Usage
 
@@ -50,12 +50,50 @@ if $$$ISERR(sc) write "Received a server error: "_$System.Status.GetErrorText(sc
 return $$$OK
 ```
 
+## Default settings
+
+You can also provide an object with the following default settings:
+
+* `baseURL`: A prefix for a URL path.
+* `defaultHeaders`: An object hash of header name and values.
+
+```objectscript
+set agent = ##class(Forgery.Agent).%New({
+ "baseURL": "/my/web/app/name",
+ "headers": {
+    "Content-Type": "application/json; charset=utf-8"
+ }
+})
+
+// Any requests that begins with `agent` will be using the default configuration.
+set sc = agent.Get("/", .response)
+```
+
+## Response and CSP Response
+
+You can also retrieve the last response and %CSP.Response instance:
+
+```objectscript
+// This returns the last reply sent by the "server".
+set response = agent.GetLastResponse()
+
+// And this is how the %response object has been filled.
+set %response = agent.GetLastCSPResponse()
+```
+
+Retrieving the %CSP.Response object allows you to execute fine-grained assertions.
+## About the Jar
+
+The cookie Jar is a memory store managed by the agent. It uses the jar to store any cookies from the CSP response object. This allows the agent to re-use these cookies without the developer having to hard code it every request. In addition, the jar is protected from external tampering in order to provide a safe environment to simulate httpOnly cookies.
+
+Although the jar stores cookies from multiple requests, the agent will pick only the ones that are relevant to the URL and each cookie's Path attribute (if present).
+
 # Troubleshooting
 
 ### _I provided a URL but it's not finding my dispatch class?_
 
 Since you're not actually hitting your web server, you only need to provide the path that
-ressembles your web application's name/path onwards. Do not provide the hostname, protocol or any path that is before what you defined for your web application.
+ressembles your web application's name/path onwards. Do not provide the hostname, protocol or any path that comes before the web application name.
 
 ### _My application uses custom cookies and I tried setting them using the Set-Cookies header but to no avail?_
 

@@ -25,24 +25,30 @@ Property CgiEnvs As %String [ MultiDimensional ];
 
 Property Data As %String [ MultiDimensional ];
 
-Method %OnNew(url As %String, method As %String = "GET") As %Status [ Private ]
+Method %OnNew(url As %String, info As Forgery.Agent.ApplicationInfo, method As %String = "GET") As %Status [ Private ]
 {
   set ..URL = url
   set ..Method = method
   set ..Content = ##class(%CSP.CharacterStream).%New()
+  set ..Application = info.AppUrl
   do ..LoadDefaultCgiEnvs()
   return $$$OK
 }
 
-ClassMethod CreateFromSettings(settings As %DynamicObject, ByRef cookiesJar As %String = "") As Forgery.Request [ Internal ]
+ClassMethod NormalizeURL(url As %String) As %String [ Private ]
 {
-  set urlWithoutQueryParams = $piece(settings.url, "?")
-  set request = ..%New(urlWithoutQueryParams, settings.method)
-  
-  if $data(cookiesJar) merge request.Cookies = cookiesJar
+  set url = $select($extract(url, 1) '= "/" : "/"_url, 1: url)
+  set url = $piece(url, "?")
+  return url
+}
 
-  do AppendToRequest("headers", settings.headers)
-  do AppendToRequest("cookies", settings.cookies)
+ClassMethod CreateFromSettings(settings As %DynamicObject, appInfo As Forgery.Agent.ApplicationInfo) As Forgery.Request [ Internal ]
+{
+  set url = ..NormalizeURL(settings.url)
+  set request = ..%New(url, appInfo, settings.method)  
+
+  do request.AppendToRequest("headers", settings.headers)
+  do request.AppendToRequest("cookies", settings.cookies)
 
   if settings.%IsDefined("headers") {
     if settings.headers.%IsDefined("Authorization") {
@@ -62,7 +68,7 @@ ClassMethod CreateFromSettings(settings As %DynamicObject, ByRef cookiesJar As %
 
   if settings.%IsDefined("data") && $isobject(settings.data) {
     if settings.headers.%Get("Content-Type") [ "multipart/form-data" {
-      do AppendToRequest("mimedata", settings.data)
+      do request.AppendToRequest("mimedata", settings.data)
     } elseif settings.data.%IsA("%Stream.Object") {
       if settings.data.IsCharacter() set content = ##class(%CSP.CharacterStream).%New()
       else  set content = ##class(%CSP.BinaryStream).%New()
@@ -75,13 +81,20 @@ ClassMethod CreateFromSettings(settings As %DynamicObject, ByRef cookiesJar As %
         do request.SetHeader("Content-Type", "application/json")
       }
     } else {
-      do AppendToRequest("queryparams", settings.data)
+      do request.AppendToRequest("queryparams", settings.data)
     }
   }
 
   return request
+}
 
-AppendToRequest(settingName, settingData, parentKey = "")
+Method PickFromJar(jar As Forgery.Agent.CookieJar)
+{
+  do jar.PutCookiesInRequest($this)
+}
+
+Method AppendToRequest(settingName, settingData, parentKey = "") [ Private ]
+{
   if '$isobject(settingData) quit
   set iterator = settingData.%GetIterator()
 
@@ -89,19 +102,18 @@ AppendToRequest(settingName, settingData, parentKey = "")
     set appendToKeyName = key
     if $isobject(val) {
       if val.%IsA("%DynamicObject") {
-        do AppendToRequest(settingName, val)
+        do ..AppendToRequest(settingName, val)
       } elseif val.%IsA("%DynamicArray") {
-        do AppendToRequest(settingName, val, key)
+        do ..AppendToRequest(settingName, val, key)
       }
     } elseif parentKey '= "" {
       set appendToKeyName = parentKey
     }
-    if settingName = "headers" { do request.SetHeader(appendToKeyName, val) }
-    elseif settingName = "cookies" { do request.InsertCookie(appendToKeyName, val) }
-    elseif settingName = "mimedata" { do request.InsertMimeData(appendToKeyName, val) }
-    elseif settingName = "queryparams" { do request.Insert(appendToKeyName, val) }
+    if settingName = "headers" { do ..SetHeader(appendToKeyName, val) }
+    elseif settingName = "cookies" { do ..InsertCookie(appendToKeyName, val) }
+    elseif settingName = "mimedata" { do ..InsertMimeData(appendToKeyName, val) }
+    elseif settingName = "queryparams" { do ..Insert(appendToKeyName, val) }
   }
-  quit
 }
 
 Method AuthorizationSet(value As %String) As %Status [ Final ]
@@ -138,6 +150,7 @@ Method LoadDefaultCgiEnvs() [ Private ]
   set i%CgiEnvs("SERVER_NAME") = "localhost"
   set i%CgiEnvs("SERVER_PORT") = 57772
   set i%CgiEnvs("SERVER_PROTOCOL") = "HTTP/1.1"
+  set i%CgiEnvs("REMOTE_ADDR") = "localhost"
 
 ParseQueryString(qs, data)
   if qs = "" quit
