@@ -24,10 +24,10 @@ ClassMethod Capture(dispatcherClass As %String, url As %String, httpMethod As %S
     do ##class(%Device).ReDirectIO(1)
     use $io::("^"_$zname)
     set isRedirected = 1
-    $$$ThrowOnError($classmethod(dispatcherClass, "DispatchRequest", url, httpMethod))
+    set sc = $classmethod(dispatcherClass, "DispatchRequest", url, httpMethod)  
     do str.Rewind()
   } catch ex {
-    if $isobject(str) do str.Clear()
+    set str = ""
     set sc = ex.AsStatus()
     set %response.OutputSessionToken = 0
     do $classmethod(dispatcherClass, "Http500", ##class(%Exception.StatusException).CreateFromStatus(sc))
@@ -36,7 +36,7 @@ ClassMethod Capture(dispatcherClass As %String, url As %String, httpMethod As %S
   if oldMnemonic '= "" {
     use initIO::("^"_oldMnemonic)
   } else {
-    use oldMnemonic
+    use initIO::""
   }
 
   do ##class(%Device).ReDirectIO(alreadyRedirected)
@@ -53,3 +53,4 @@ rchr(time) Quit ""
 }
 
 }
+
