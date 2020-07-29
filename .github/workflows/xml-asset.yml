@@ -46,7 +46,7 @@ jobs:
         upload_url=$(curl -s -X GET -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/$GITHUB_REPOSITORY/releases/latest | jq -r '. | .upload_url')
         echo ::set-output name=UPLOAD_URL::$upload_url
     - name: Upload release asset
-      id: release-asset-rconnect
+      id: release-asset-upload
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
