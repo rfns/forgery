@@ -2,7 +2,7 @@
 <Export generator="Cache" version="25">
 <Document name="Forgery.ZPM"><Module>
   <Name>Forgery</Name>
-  <Version>2.0.0</Version>
+  <Version>1.3.1</Version>
   <Packaging>module</Packaging>
   <Resource Name="Forgery.PKG" />
   <LifecycleClass>Module</LifecycleClass>
