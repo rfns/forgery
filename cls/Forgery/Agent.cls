@@ -48,9 +48,4 @@ Method Options(settings As %DynamicObject, response As %Stream.Object, outputToD
   return ..Request(settings, .response, outputToDevice)
 }
 
-Method GetLastResponse() As %CSP.Response
-{
-  return ..LastResponse
-}
-
 }
