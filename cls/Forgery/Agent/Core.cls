@@ -86,18 +86,18 @@ Method MergeWithDefaultHeaders(requestActionHeaders As %DynamicObject = {{}}) [ 
   }
 }
 
-Method Request(settings As %DynamicObject, response As %Stream.Object = "", outputToDevice As %Boolean = 0) As %Status
+Method Request(settings As %DynamicObject, reply As %Stream.Object = "", outputToDevice As %Boolean = 0) As %Status
 {
   set sc = $$$OK
 
   set normalizedSettings = ..NormalizeSettings(settings)
-  $$$QuitOnError(..Forge(normalizedSettings, .response))
+  $$$QuitOnError(..Forge(normalizedSettings, .reply))
 
-  if outputToDevice = 1 do response.OutputToDevice()
+  if outputToDevice = 1 do reply.OutputToDevice()
   return $$$OK
 }
 
-Method Forge(settings As %DynamicObject, response As %Stream.Object = "", outputToDevice As %Boolean = 0) As %Status [ Private ]
+Method Forge(settings As %DynamicObject, reply As %Stream.Object = "", outputToDevice As %Boolean = 0) As %Status [ Private ]
 {
   kill %request, %session, %response
   new %request, %session, %response
@@ -118,7 +118,7 @@ Method Forge(settings As %DynamicObject, response As %Stream.Object = "", output
     set sc = ex.AsStatus()
   }
 
-  set ..Reply = response
+  set ..Reply = reply
   set ..Response = %response
   kill %request, %session, %response
 
