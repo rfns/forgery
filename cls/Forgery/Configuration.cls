@@ -9,7 +9,9 @@ Property DeviceLineTerminator As %String [ InitialExpression = {$char(13,10)}, P
 
 Property DeviceCharset As %String [ InitialExpression = "utf-8", Private ];
 
-Property DefaultRequestHeaders As %DynamicObject [ InitialExpression = {{}}, Private ];
+Property RequestDefaultHeaders As %DynamicObject [ InitialExpression = {{}}, Private ];
+
+Property RequestDefaultCookies As %DynamicArray [ InitialExpression = {[]}, Private ];
 
 Method SetBaseURL(baseURL As %String) As %Status
 {
@@ -55,15 +57,26 @@ Method GetDeviceCharset() As %String [ CodeMode = expression ]
 ..DeviceCharset
 }
 
-Method SetDefaultRequestHeaders(headers As %DynamicObject) As %Status
+Method SetRequestDefaultHeaders(headers As %DynamicObject) As %Status
 {
-  set ..DefaultRequestHeaders = headers
+  set ..RequestDefaultHeaders = headers
   return $$$OK
 }
 
-Method GetDefaultRequestHeaders() As %DynamicObject [ CodeMode = expression ]
+Method GetRequestDefaultHeaders() As %DynamicObject [ CodeMode = expression ]
 {
-..DefaultRequestHeaders
+..RequestDefaultHeaders
+}
+
+Method SetRequestDefaultCookies(headers As %DynamicObject) As %Status
+{
+  set ..RequestDefaultCookies = headers
+  return $$$OK
+}
+
+Method GetRequestDefaultCookies() As %DynamicObject [ CodeMode = expression ]
+{
+..RequestDefaultCookies
 }
 
 Method Validate() As %Status
@@ -72,12 +85,15 @@ Method Validate() As %Status
 
   if ..BaseURL = "" set status = $$$ADDSC(status, $$$ERROR($$$GeneralError, "Base URL is required."))
   if '$isobject(..DispatchHandler) set status = $$$ADDSC(status, $$$ERROR($$$GeneralError, "Dispatch handler is required."))
-  if '$isobject(..DefaultRequestHeaders) || ..DefaultRequestHeaders.%Extends("%DynamicObject") {
-    set status = $$$ADDSC(status, $$$ERROR($$$GeneralError, "Default request headers must be an instance of %DynamicObject if provided."))
+  if '$isobject(..RequestDefaultHeaders) || '..RequestDefaultHeaders.%Extends("%DynamicObject") {
+    set status = $$$ADDSC(status, $$$ERROR($$$GeneralError, "Request default headers must be an instance of %DynamicObject if provided."))
   }
+  if '$isobject(..RequestDefaultCookies) || '..RequestDefaultCookies.%Extends("%DynamicArray") {
+    set status = $$$ADDSC(status, $$$ERROR($$$GeneralError, "Request default cookies must be an instance of %DynamicArrayObject if provided."))
+  }  
 
   if $$$ISERR(status) {
-    set status = $$$EMBEDSC($$$ERROR($$$GeneralError, "Configuration validation error: One or more settings are missing:"), status)
+    set status = $$$EMBEDSC($$$ERROR($$$GeneralError, "Configuration validation error: One or more settings are missing or wrong:"), status)
   }
 
   return status
