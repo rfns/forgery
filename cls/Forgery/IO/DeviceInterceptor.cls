@@ -93,6 +93,8 @@ Method EndInterception() As %Status [ ProcedureBlock = 0 ]
   if $isobject(..DeviceContent) do ..DeviceContent.Rewind()
   do ##class(%Device).ReDirectIO(..DeviceRedirected)
 
+  set ..DeviceRedirected = 0
+
   return $$$OK
 }
 
