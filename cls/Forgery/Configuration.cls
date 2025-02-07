@@ -68,7 +68,7 @@ Method GetRequestDefaultHeaders() As %DynamicObject [ CodeMode = expression ]
 ..RequestDefaultHeaders
 }
 
-Method SetRequestDefaultCookies(headers As %DynamicObject) As %Status
+Method SetRequestDefaultCookies(headers As %DynamicArray) As %Status
 {
   set ..RequestDefaultCookies = headers
   return $$$OK
