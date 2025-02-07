@@ -11,8 +11,8 @@ Method TestCanSetAndGetBaseUrl()
 {
   set expectedUrl = "/testing/api"
   set config = ##class(Forgery.Configuration).%New()
-  do config.SetBaseURL(expectedUrl)
-  
+
+  do $$$AssertStatusOK(config.SetBaseURL(expectedUrl))
   do $$$AssertEquals(config.GetBaseURL(), expectedUrl)
 }
 
@@ -21,8 +21,7 @@ Method TestSetAndGetDispatchHandler()
   set expectedDispatcher = ##class(Test.Forgery.FakeRouteDispatcher).%New("")
   set config = ##class(Forgery.Configuration).%New()
 
-  do config.SetDispatchHandler(expectedDispatcher)
-
+  do $$$AssertStatusOK(config.SetDispatchHandler(expectedDispatcher))
   do $$$AssertEquals(config.GetDispatchHandler(), expectedDispatcher)
 }
 
@@ -31,8 +30,7 @@ Method TestCanSetAndGetDeviceInterceptorLineTerminator()
   set config = ##class(Forgery.Configuration).%New()
   set expectedLineTerminator = $char(9)
 
-  do config.SetDeviceLineTerminator(expectedLineTerminator)
-
+  do $$$AssertStatusOK(config.SetDeviceLineTerminator(expectedLineTerminator))
   do $$$AssertEquals(config.GetDeviceLineTerminator(), expectedLineTerminator)
 }
 
@@ -41,9 +39,17 @@ Method TestCanSetAndGetDeviceCharsetTerminator()
   set config = ##class(Forgery.Configuration).%New()
   set expectedCharset = "iso-8859-1"
 
-  do config.SetDeviceCharset(expectedCharset)
-
+  do $$$AssertStatusOK(config.SetDeviceCharset(expectedCharset))
   do $$$AssertEquals(config.GetDeviceCharset(), expectedCharset)
+}
+
+Method TestCanSetAndGetDefaultRequestHeaders()
+{
+  set config = ##class(Forgery.Configuration).%New()
+  set headers = { "X-Authorization": "Basic blahblahblah" }
+  
+  do $$$AssertStatusOK(config.SetDefaultRequestHeaders(headers))
+  do $$$AssertEquals(config.GetDefaultRequestHeaders(), headers)
 }
 
 }
