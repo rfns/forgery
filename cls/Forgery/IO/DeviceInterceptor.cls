@@ -26,15 +26,16 @@ Method %OnClose() As %Status
   return ..EndInterception()
 }
 
-Method Intercept(handler As Forgery.IDispatchHandler) As %Status
+Method Intercept(dispatchHandler As Forgery.IDispatchHandler) As %Status
 {
   set status = $$$OK
 
   $$$QuitOnError(..StartInterception())
 
   try {
-    do handler.Dispatch()
+    do dispatchHandler.Handle()
   } catch ex {
+    do dispatchHandler.PostHandle()    
     set status = ex.AsStatus()
   }
 
@@ -55,6 +56,8 @@ Method ChangeLineTerminator(lineTerminator As %String) [ Private ]
 Method StartInterception() As %Status [ Private, ProcedureBlock = 0 ]
 {
   new status
+
+  $$$QuitOnError(..DeviceContent.Clear())
 
   set status = $$$OK
   set %forgeryDeviceInterceptedStream = ..DeviceContent
