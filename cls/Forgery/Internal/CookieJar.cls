@@ -1,4 +1,4 @@
-Class Forgery.Agent.CookieJar Extends %RegisteredObject
+Class Forgery.Internal.CookieJar Extends %RegisteredObject
 {
 
 Property Cookies As %String [ MultiDimensional ];
@@ -51,4 +51,3 @@ Method Empty()
 }
 
 }
-
