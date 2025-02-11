@@ -1,9 +1,9 @@
 Class Forgery.IDispatchHandler [ Abstract ]
 {
 
-Method Dispatch() As %Status [ Abstract ]
+Method Handle(resource As %String, httpMethod As %String, restDispatchClass As %String) As %Status [ Abstract ]
 {
-  $$$ThrowStatus($$$ERROR($$$MethodNotImplemented, "Dispatch"))
+  $$$ThrowStatus($$$ERROR($$$MethodNotImplemented, "Handle"))
 }
 
 }
