@@ -1,22 +1,28 @@
 Class Test.Forgery.DeviceInterception Extends %UnitTest.TestCase
 {
 
+Method OnAfterAllTests() As %Status
+{
+  do ##class(%Device).ReDirectIO(1)
+  return $$$OK
+}
+
 Method TestInterceptRouteDispatcherWrites()
 {
   set interceptor = ##class(Forgery.IO.DeviceInterceptor).%New()
-  set dispatcher = ##class(Test.Forgery.FakeRouteDispatcher).%New("reply with this")
+  set dispatcher = ##class(Test.Forgery.Setup.StubbedDispatchHandler).%New("reply with this")
 
-  do $$$AssertStatusOK(interceptor.Intercept(dispatcher))
+  do $$$AssertStatusOK(interceptor.Intercept(dispatcher, "", "", ""))
   do $$$AssertEquals(interceptor.GetInterceptedContent().Read(), "reply with this")
 }
 
 Method TestVariableLifetime()
 {
   set interceptor = ##class(Forgery.IO.DeviceInterceptor).%New()
-  set dispatcher = ##class(Test.Forgery.FakeRouteDispatcher).%New("reply with this")
+  set dispatcher = ##class(Test.Forgery.Setup.StubbedDispatchHandler).%New("reply with this")
 
   set publicVarPreExistsPostConstrutor = $data(%forgeryDeviceInterceptedStream)
-  do interceptor.Intercept(dispatcher)
+  do $$$AssertStatusOK(interceptor.Intercept(dispatcher, "", "", ""))
   set publicVarPostExistsPostCall = $data(%forgeryDeviceInterceptedStream)
 
   do $$$AssertNotTrue(publicVarPreExistsPostConstrutor)

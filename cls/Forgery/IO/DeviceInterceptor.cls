@@ -26,16 +26,15 @@ Method %OnClose() As %Status
   return ..EndInterception()
 }
 
-Method Intercept(dispatchHandler As Forgery.IDispatchHandler) As %Status
+Method Intercept(dispatchHandler As Forgery.IDispatchHandler, resource As %String, httpMethod As %String, restDispatchClass As %String) As %Status
 {
   set status = $$$OK
 
   $$$QuitOnError(..StartInterception())
 
   try {
-    do dispatchHandler.Handle()
+    do dispatchHandler.Handle(resource, httpMethod, restDispatchClass)
   } catch ex {
-    do dispatchHandler.PostHandle()    
     set status = ex.AsStatus()
   }
 
