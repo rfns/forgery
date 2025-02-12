@@ -15,12 +15,6 @@ Method OnBeforeOneTest() As %Status
   return $$$OK
 }
 
-Method OnAfterAllTests() As %Status
-{
-  do ##class(%Device).ReDirectIO(1)
-  return $$$OK
-}
-
 Method TestCanDispatchWithQueryParams()
 {
   do $$$AssertStatusOK(..Dispatcher.Dispatch("/hello?message=testing message", "GET"))

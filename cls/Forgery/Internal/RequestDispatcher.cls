@@ -64,6 +64,8 @@ Method Dispatch(resource As %String, httpMethod As %String, data As %DynamicAbst
     set status = ex.AsStatus()
   }
 
+  kill %request, %response, %session
+
   // Ensure we are back to the original namespace after the dispatch.
   set $namespace = ..InitialNamespace
   return status
