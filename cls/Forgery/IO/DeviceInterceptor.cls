@@ -7,7 +7,7 @@ Property OriginalDevice As %String [ InitialExpression = {$io}, Private ];
 
 Property DeviceMnemonic As %String [ InitialExpression = {##class(%Device).GetMnemonicRoutine()}, Private ];
 
-Property DeviceRedirected As %Boolean [ InitialExpression = {##class(%Device).ReDirectIO()}, Private ];
+Property DevicePreviouslyRedirected As %Boolean [ InitialExpression = {##class(%Device).ReDirectIO()}, Private ];
 
 Property TranslateTable As %String [ Private ];
 
@@ -61,23 +61,23 @@ Method StartInterception() As %Status [ Private, ProcedureBlock = 0 ]
   set status = $$$OK
   set %forgeryDeviceInterceptedStream = ..DeviceContent
 
-  use $io::("^"_$zname)
-  do ##class(%Device).ReDirectIO(1)
-
-  set ..DeviceRedirected = 1
+  use ..OriginalDevice::("^"_$zname)
+  do ##class(%Device).ReDirectIO($$$YES)
 
   return $$$OK
 }
 
 ClassMethod redirections() [ Internal, Private, ProcedureBlock = 0 ]
 {
+  #define WriteIfStreamExists(%ch) do:$data(%forgeryDeviceInterceptedStream) %forgeryDeviceInterceptedStream.Write(%ch)
+  
   quit
 
-wstr(s) do %forgeryDeviceInterceptedStream.Write(s) Quit
-wchr(a) do %forgeryDeviceInterceptedStream.Write($char(a)) Quit
-wnl do %forgeryDeviceInterceptedStream.Write($char(13,10)) Quit
-wff do %forgeryDeviceInterceptedStream.Write($char(13,10,13,10)) Quit
-wtab(n) do %forgeryDeviceInterceptedStream.Write($c(9)) Quit
+wstr(s) $$$WriteIfStreamExists(s) Quit
+wchr(a) $$$WriteIfStreamExists($char(a)) Quit
+wnl $$$WriteIfStreamExists($char(13,10)) Quit
+wff $$$WriteIfStreamExists($char(13,10,13,10)) Quit
+wtab(n) $$$WriteIfStreamExists($c(9)) Quit
 rstr(len,time) Quit ""
 rchr(time) Quit ""
 }
@@ -87,15 +87,13 @@ Method EndInterception() As %Status [ ProcedureBlock = 0 ]
   if ..DeviceMnemonic '= "" && (..DeviceMnemonic '= "%X364") {
     use ..OriginalDevice::("^"_..DeviceMnemonic)
   } else {
-    use ..OriginalDevice::""
+    use ..OriginalDevice
   }
 
   kill %forgeryDeviceInterceptedStream
 
   if $isobject(..DeviceContent) do ..DeviceContent.Rewind()
-  do ##class(%Device).ReDirectIO(..DeviceRedirected)
-
-  set ..DeviceRedirected = 0
+  if ..DevicePreviouslyRedirected '= 1 do ##class(%Device).ReDirectIO($$$NO)
 
   return $$$OK
 }
