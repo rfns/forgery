@@ -8,9 +8,10 @@ XData UrlMap
 </Routes>
 }
 
-ClassMethod SayHello(message As %String)
+ClassMethod SayHello()
 {
-  write { "message": (message) }.%ToJSON()
+  write { "message": (%request.Get("message")) }.%ToJSON()
+  return $$$OK
 }
 
 }
