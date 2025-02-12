@@ -6,7 +6,7 @@ Method Post(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF},
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Post"))
 }
 
-Method Get(resource As %String, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Get(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Get"))
 }
@@ -16,12 +16,12 @@ Method Put(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, 
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Put"))
 }
 
-Method Delete(resource As %String, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Delete(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Delete"))
 }
 
-Method Head(resource As %String, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Head(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Head"))
 }
