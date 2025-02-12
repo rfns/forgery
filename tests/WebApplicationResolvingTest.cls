@@ -1,38 +1,9 @@
 Class Test.Forgery.WebApplicationResolving Extends (%UnitTest.TestCase, Test.Forgery.Extensions.AssertiveStatus)
 {
 
-Property BaseURL As %String;
+Property BaseURL As %String [ InitialExpression = {##class(Test.Forgery.Setup.Parameters).#TESTBASEURL} ];
 
-Property DispatchClass As %String;
-
-Method OnBeforeAllTests() As %Status
-{
-  set ..BaseURL = ##class(Test.Forgery.Setup.Parameters).#TESTBASEURL
-  set ..DispatchClass = ##class(Test.Forgery.Setup.Parameters).#TESTDISPATCHCLASS
-  
-  new $namespace 
-  set $namespace = "%SYS"
-
-  set app = ##class(Security.Applications).%New()
-  set app.Name = ..BaseURL
-  set app.DispatchClass = ..DispatchClass
-  set app.MatchRoles = "%:All"
-  set app.InbndWebServicesEnabled = 1
-  set app.Enabled = 1
-  set app.NameSpace = "USER"
-
-  return app.%Save()
-}
-
-Method OnAfterAllTests() As %Status
-{
-  set baseUrl = ##class(Test.Forgery.Setup.Parameters).#TESTBASEURL
-
-  new $namespace
-  set $namespace = "%SYS"
-
-  return ##class(Security.Applications).%DeleteId(baseUrl)
-}
+Property DispatchClass As %String [ InitialExpression = {##class(Test.Forgery.Setup.Parameters).#TESTDISPATCHCLASS} ];
 
 Method WithBaseURL(resource As %String)
 {
