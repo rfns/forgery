@@ -25,32 +25,32 @@ Method %OnNew(configuration As Forgery.Configuration, requestDispatcherFactory A
   return $$$OK
 }
 
-Method Post(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Post(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Abstract ]
 {
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Post"))
 }
 
-Method Get(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Get(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Abstract ]
 {
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Get"))
 }
 
-Method Put(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Put(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Abstract ]
 {
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Put"))
 }
 
-Method Delete(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Delete(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Abstract ]
 {
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Delete"))
 }
 
-Method Head(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Head(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Abstract ]
 {
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Head"))
 }
 
-Method Patch(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF})
+Method Patch(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) [ Abstract ]
 {
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Patch"))
 }
