@@ -65,7 +65,7 @@ Method SetRequestDefaultHeaders(headers As %DynamicObject) As %Status
 
 Method GetRequestDefaultHeaders() As %DynamicObject [ CodeMode = expression ]
 {
-..RequestDefaultHeaders
+$select($isobject(..RequestDefaultHeaders) : ..RequestDefaultHeaders, 1: {})
 }
 
 Method SetRequestDefaultCookies(headers As %DynamicArray) As %Status
@@ -76,7 +76,7 @@ Method SetRequestDefaultCookies(headers As %DynamicArray) As %Status
 
 Method GetRequestDefaultCookies() As %DynamicObject [ CodeMode = expression ]
 {
-..RequestDefaultCookies
+$select($isobject(..RequestDefaultCookies) : ..RequestDefaultCookies, 1: {})
 }
 
 Method Validate() As %Status
