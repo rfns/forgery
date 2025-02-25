@@ -40,7 +40,7 @@ Method TestDontOverwriteKeys()
   do $$$AssertEquals(result.a, "b")
 }
 
-Method TestDoMergeNestedObjects()
+Method TestMergeNestedObjects()
 {
   set source1 = { "a": { "b": "c" } }
   set source2 = { "a": { "b": "c", "d": { "e": 1 } }}

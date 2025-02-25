@@ -29,7 +29,7 @@ Method WithHeaders(headers As %DynamicObject = {{}}) As Forgery.AgentBuilder
 
 Method WithCookies(cookies As %DynamicArray) As %Status
 {
-  do ..Configuration.SetRequestDefaultHeaders(cookies)
+  do ..Configuration.SetRequestDefaultCookies(cookies)
   return $this
 }
 

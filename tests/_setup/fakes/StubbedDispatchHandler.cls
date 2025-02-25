@@ -10,8 +10,14 @@ Method %OnNew(message As %String = "") As %Status
   return $$$OK
 }
 
-Method Handle(resource As %String, httpMethod As %String, restDispatchClass As %String) As %Status
+Method OnDispatch(resource As %String, httpMethod As %String, restDispatchClass As %String, cspContext As Forgery.CSP.Context) As %Status
 {
+  
+  // Must publish these variables because of how %CSP.Page works.
+  set %request = cspContext.Request
+  set %response = cspContext.Response
+  set %session = cspContext.Session
+  
   if ..Message '= "" {
     write ..Message
     return $$$OK
@@ -29,6 +35,12 @@ Method Handle(resource As %String, httpMethod As %String, restDispatchClass As %
   }
 
   return $$$OK
+}
+
+Method OnDispose() As %Status
+{
+ kill %request, %session, %request
+ return $$$OK
 }
 
 }

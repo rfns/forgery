@@ -1,32 +1,50 @@
 Class Test.Forgery.DeviceInterception Extends %UnitTest.TestCase
 {
 
-Method OnAfterAllTests() As %Status
+Property Context As %DynamicObject [ Private ];
+
+Method OnBeforeOneTest() As %Status
 {
-  do ##class(%Device).ReDirectIO(1)
+  set baseUrl = ##class(Test.Forgery.Setup.Parameters).#TESTBASEURL
+  set ..Context = {
+    "Request": (##class(Forgery.CSP.Request).%New(baseUrl, "GET",, { "AppUrl": (baseUrl) })),
+    "Response": (##class(%CSP.Response).%New())
+  }
+
   return $$$OK
 }
 
-Method TestInterceptRouteDispatcherWrites()
+Method TestInterceptionCycle()
 {
+  set expectedContent = "intercepted messsage"
+  
   set interceptor = ##class(Forgery.IO.DeviceInterceptor).%New()
-  set dispatcher = ##class(Test.Forgery.Setup.StubbedDispatchHandler).%New("reply with this")
 
-  do $$$AssertStatusOK(interceptor.Intercept(dispatcher, "", "", ""))
-  do $$$AssertEquals(interceptor.GetInterceptedContent().Read(), "reply with this")
+  set interceptionStatus1 = interceptor.StartInterception()
+  write expectedContent
+  set interceptionStatus2 = interceptor.EndInterception()
+
+  do $$$AssertStatusOK(interceptionStatus1)
+  do $$$AssertStatusOK(interceptionStatus2)
+
+  do $$$AssertEquals(interceptor.GetInterceptedContent().Read(), expectedContent)
 }
 
 Method TestVariableLifetime()
 {
   set interceptor = ##class(Forgery.IO.DeviceInterceptor).%New()
-  set dispatcher = ##class(Test.Forgery.Setup.StubbedDispatchHandler).%New("reply with this")
-
   set publicVarPreExistsPostConstrutor = $data(%forgeryDeviceInterceptedStream)
-  do $$$AssertStatusOK(interceptor.Intercept(dispatcher, "", "", ""))
-  set publicVarPostExistsPostCall = $data(%forgeryDeviceInterceptedStream)
+
+  do interceptor.StartInterception()
+  set publicVarExistsPostStartedInterception = $data(%forgeryDeviceInterceptedStream)
+
+  set interceptor = "" // calls EndInterception on %OnClose.
+
+  set publicVarExistsPostEndedInterception = $data(%forgeryDeviceInterceptedStream)
 
   do $$$AssertNotTrue(publicVarPreExistsPostConstrutor)
-  do $$$AssertNotTrue(publicVarPostExistsPostCall)
+  do $$$AssertTrue(publicVarExistsPostStartedInterception)
+  do $$$AssertNotTrue(publicVarExistsPostEndedInterception)
 }
 
 Method TestCanChangeCharset()

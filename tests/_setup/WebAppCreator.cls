@@ -1,24 +1,26 @@
-Class Test.Forgery.Setup.WebAppCreator Extends %Projection.AbstractProjection [ CompileAfter = Test.Forgery.Setup.Parameters ]
+Class Test.Forgery.Setup.WebAppCreator Extends %Projection.AbstractProjection
 {
 
-Projection CreatorProjection As Test.Forgery.Setup.WebAppCreator;
+Parameter TESTBASEURL = "/test/forgery/api";
+
+Parameter TESTDISPATCHCLASS = "Test.Forgery.Setup.FakeRouter";
+
+Projection WebAppProjection As Test.Forgery.Setup.WebAppCreator;
 
 ClassMethod CreateProjection() As %Status
 {
-  set baseUrl = ##class(Test.Forgery.Setup.Parameters).#TESTBASEURL
-  set dispatchClass = ##class(Test.Forgery.Setup.Parameters).#TESTDISPATCHCLASS
   
   new $namespace
   set $namespace = "%SYS"
 
-  if ##class(Security.Applications).%ExistsId(baseUrl) {
+  if ##class(Security.Applications).%ExistsId(..#TESTBASEURL) {
     return $$$OK
   }
 
-  set webApp = ##class(Security.Applications).%New(baseUrl)
-  set webApp.Name = baseUrl
-  set webApp.DispatchClass = dispatchClass
-  set webApp.CookiePath = baseUrl
+  set webApp = ##class(Security.Applications).%New(..#TESTBASEURL)
+  set webApp.Name = ..#TESTBASEURL
+  set webApp.DispatchClass = ..#TESTDISPATCHCLASS
+  set webApp.CookiePath = ..#TESTBASEURL
   set webApp.NameSpace = "DEV"
   set webApp.UseCookies = 2
   set webApp.Recurse = 1
@@ -31,12 +33,11 @@ ClassMethod CreateProjection() As %Status
 
 ClassMethod RemoveProjection() As %Status
 {
-  set baseUrl = ##class(Test.Forgery.Setup.Parameters).#TESTBASEURL
-  
+ 
   new $namespace
   set $namespace = "%SYS"
 
-  do ##class(Security.Applications).%DeleteId(baseUrl)
+  do ##class(Security.Applications).%DeleteId(..#TESTBASEURL)
   return $$$OK
 }
 

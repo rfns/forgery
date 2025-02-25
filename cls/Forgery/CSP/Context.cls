@@ -7,11 +7,11 @@ Property Response As %CSP.Response;
 
 Property Session As %CSP.Session;
 
-Method %OnNew(resource As %String, httpMethod As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, appInfo As %DynamicObject, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method %OnNew(session As %CSP.Session, request As Forgery.CSP.Request, response As %CSP.Response) As %Status
 {
-  set ..Request = ##class(Forgery.CSP.Request).%New(resource, httpMethod, data, appInfo, overrides)
-  set ..Response = ##class(%CSP.Response).%New()
-  set ..Session = ##class(%CSP.Session).%New($System.Encryption.GenCryptToken(), 0)
+  set ..Session = session
+  set ..Request = request
+  set ..Response = response
 
   return $$$OK
 }

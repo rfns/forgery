@@ -41,7 +41,7 @@ Method ContentTypeSet(value As %String) As %Status [ Private ]
 
 Method ContentLengthSet(value As %String) As %Status [ Private ]
 {
-  set i%CgiEvs("CONTENT_LENGTH") = value
+  set i%CgiEnvs("CONTENT_LENGTH") = value
   set i%ContentLength = value
   return $$$OK
 }

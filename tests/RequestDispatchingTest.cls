@@ -17,7 +17,7 @@ Method OnBeforeOneTest() As %Status
 
 Method TestCanDispatchWithQueryParams()
 {
-  do $$$AssertStatusOK(..Dispatcher.Dispatch("/hello?message=testing message", "GET"))
+  do $$$AssertStatusOK(..Dispatcher.Dispatch("GET", "/hello?message=testing message"))
 
   do $$$AssertEquals(..Dispatcher.GetLastReply().Read(), { "message": "testing message"}.%ToJSON())
   do $$$AssertEquals(..Dispatcher.GetLastContext().Request.Method, "GET")
@@ -26,7 +26,7 @@ Method TestCanDispatchWithQueryParams()
 Method TestCanDispatchWithPayload()
 {
   set payload = { "message": "Hello from POST dispatch!" }
-  do $$$AssertStatusOK(..Dispatcher.Dispatch("/hello", "POST", payload))
+  do $$$AssertStatusOK(..Dispatcher.Dispatch("POST", "/hello", payload))
 
   do $$$AssertEquals(..Dispatcher.GetLastReply().Read(), payload.%ToJSON())
   do $$$AssertEquals(..Dispatcher.GetLastContext().Request.Method, "POST")

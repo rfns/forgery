@@ -3,27 +3,32 @@ Class Forgery.Agent Extends (%RegisteredObject, Forgery.Internal.BaseAgent)
 
 Method Post(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
-  return ..DoRequest(resource, ..#HTTPPOSTMETHOD, data, overrides)
+  return ..DoRequest(..#HTTPPOSTMETHOD, resource, data, overrides)
 }
 
 Method Get(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
-  return ..DoRequest(resource, ..#HTTPGETMETHOD, queryParams, overrides)
+  return ..DoRequest(..#HTTPGETMETHOD, resource, queryParams, overrides)
 }
 
 Method Put(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
-  return ..DoRequest(resource, ..#HTTPPUTMETHOD, data, overrides)
+  return ..DoRequest(..#HTTPPUTMETHOD, resource, data, overrides)
 }
 
 Method Delete(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
-  return ..DoRequest(resource, ..#HTTPDELETEMETHOD, queryParams, overrides)
+  return ..DoRequest(..#HTTPDELETEMETHOD, resource, queryParams, overrides)
 }
 
 Method Head(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
-  return ..DoRequest(resource, ..#HTTPHEADMETHOD, queryParams, overrides)
+  return ..DoRequest(..#HTTPHEADMETHOD, resource, queryParams, overrides)
+}
+
+Method SendMultipart(resource, formData As %DynamicArray, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+{
+  return ..DoRequest(..#HTTPPOSTMETHOD, resource, formData, { "headers": { "Content-Type": "multipart/form-data" } })
 }
 
 }

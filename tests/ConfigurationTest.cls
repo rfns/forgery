@@ -18,7 +18,7 @@ Method TestCanSetAndGetBaseUrl()
 
 Method TestSetAndGetDispatchHandler()
 {
-  set expectedDispatcher = ##class(Test.Forgery.FakeRouteDispatcher).%New("")
+  set expectedDispatcher = ##class(Test.Forgery.Setup.StubbedDispatchHandler).%New("")
   set config = ##class(Forgery.Configuration).%New()
 
   do $$$AssertStatusOK(config.SetDispatchHandler(expectedDispatcher))
@@ -65,7 +65,7 @@ Method TestValidateInvalidHeaders()
 {
   set config = ##class(Forgery.Configuration).%New()
   do config.SetBaseURL("/whatever")
-  do config.SetDispatchHandler(##class(Test.Forgery.FakeRouteDispatcher).%New("whatever"))
+  do config.SetDispatchHandler(##class(Test.Forgery.Setup.StubbedDispatchHandler).%New("whatever"))
   
   do $$$AssertStatusOK(config.SetRequestDefaultHeaders([]))
   do $$$AssertEquals(..MatchStatus(config.Validate(), "#5001: Configuration validation error: One or more settings are missing or wrong:", "#5001: Request default headers must be an instance of %DynamicObject if provided."), 1)
@@ -75,10 +75,10 @@ Method TestValidateInvalidCookies()
 {
   set config = ##class(Forgery.Configuration).%New()
   do config.SetBaseURL("/whatever")
-  do config.SetDispatchHandler(##class(Test.Forgery.FakeRouteDispatcher).%New("whatever"))
+  do config.SetDispatchHandler(##class(Test.Forgery.Setup.StubbedDispatchHandler).%New("whatever"))
   
   do $$$AssertStatusOK(config.SetRequestDefaultCookies({}))
-  do $$$AssertEquals(..MatchStatus(config.Validate(), "#5001: Configuration validation error: One or more settings are missing or wrong:", "#5001: Request default cookies must be an instance of %DynamicArrayObject if provided."), 1)
+  do $$$AssertEquals(..MatchStatus(config.Validate(), "#5001: Configuration validation error: One or more settings are missing or wrong:", "#5001: Request default cookies must be an instance of %DynamicArray if provided."), 1)
 }
 
 }

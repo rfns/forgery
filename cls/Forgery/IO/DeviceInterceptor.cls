@@ -26,22 +26,6 @@ Method %OnClose() As %Status
   return ..EndInterception()
 }
 
-Method Intercept(dispatchHandler As Forgery.IDispatchHandler, resource As %String, httpMethod As %String, restDispatchClass As %String) As %Status
-{
-  set status = $$$OK
-
-  $$$QuitOnError(..StartInterception())
-
-  try {
-    do dispatchHandler.Handle(resource, httpMethod, restDispatchClass)
-  } catch ex {
-    set status = ex.AsStatus()
-  }
-
-  do ..EndInterception()
-  return status
-}
-
 Method ChangeTranslateTable(charset As %String) [ Private ]
 {
   set ..DeviceContent.TranslateTable = ##class(%Net.Charset).GetTranslateTable(charset)
@@ -52,7 +36,7 @@ Method ChangeLineTerminator(lineTerminator As %String) [ Private ]
   set ..DeviceContent.LineTerminator = lineTerminator
 }
 
-Method StartInterception() As %Status [ Private, ProcedureBlock = 0 ]
+Method StartInterception() As %Status [ ProcedureBlock = 0 ]
 {
   new status
 

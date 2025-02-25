@@ -9,18 +9,15 @@ ClassMethod CreateUsingConfiguration(configuration As Forgery.Configuration) As 
   set jar = ##class(Forgery.Internal.CookieJar).%New()
   set cspContextFactory = ##class(Forgery.CSP.ContextFactory).%New()
   set merger = ##class(Forgery.Internal.ConfigurationMerger).%New()
-  set requestDefaultHeaders = configuration.GetRequestDefaultHeaders()
-  set requestDefaultCookies = configuration.GetRequestDefaultCookies()
   
   return ##class(Forgery.Internal.RequestDispatcher).%New(
+    configuration,
     resolver,
     handler,
     interceptor,
     jar,
     cspContextFactory,
-    merger,
-    requestDefaultHeaders,
-    requestDefaultCookies
+    merger
   )
 }
 

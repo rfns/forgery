@@ -1,18 +1,21 @@
-Class Test.Forgery.RequestDispatchingTest Extends %UnitTest.TestCase
+Class Test.Forgery.RequestDataHandlingTest Extends %UnitTest.TestCase
 {
 
 Method CreateRequestWithDefaults(data As %Any, method As %String = "GET", resource As %String = "", overrides = {{ "headers": {}, "cookies": [] }}) As Forgery.CSP.Request
 {
   set baseUrl = ##class(Test.Forgery.Setup.Parameters).#TESTBASEURL
   set appInfo = { "AppUrl": (baseUrl) }
-  
-  return ##class(Forgery.CSP.Request).%New(
-    baseUrl_"/"_$select($extract(resource) = "/" : $extract(resource, 2, *), 1 : resource),
-    method,
-    data,
-    appInfo,
-    overrides
+
+  set preparer = ##class(Forgery.Internal.RequestPreparer).%New()
+  set request = ##class(Forgery.CSP.Request).%New(
+    baseUrl,
+    resource,
+    method
   )
+
+  do preparer.Prepare(request, data, overrides)
+
+  return request
 }
 
 Method TestTransformDynamicObjectToContentStream()
@@ -65,6 +68,19 @@ Method TestConsumePayloadAsMimeDataIfHeaderIsSet()
   do $$$AssertEquals(request.MimeData("key", 1), "value1")
   do $$$AssertEquals(request.MimeData("key", 2), "value2")
   do $$$AssertEquals(request.MimeData("key", 3), "value3")
+}
+
+Method TestConsumeBinaryPayloadAsData()
+{
+  set binary = ##class(%Stream.FileBinary).%New()
+  do binary.LinkToFile("/usr/bin/file")
+
+  set payload = binary
+  
+  set request = ..CreateRequestWithDefaults(payload, "POST", "/")
+
+  do $$$AssertTrue(request.Content.%IsA("%CSP.BinaryStream"))
+  do $$$AssertNotTrue(request.Content.IsCharacter())
 }
 
 }
