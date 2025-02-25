@@ -20,7 +20,7 @@ Method Create(application As %String, resource As %String, httpMethod As %String
 
   do ..Preparer.Prepare(request, data, overrides)
 
-  return ##class(Forgery.CSP.Context).%New(session, request, session)
+  return ##class(Forgery.CSP.Context).%New(session, request, response)
 }
 
 }
