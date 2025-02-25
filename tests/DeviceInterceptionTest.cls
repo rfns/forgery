@@ -1,19 +1,6 @@
 Class Test.Forgery.DeviceInterception Extends %UnitTest.TestCase
 {
 
-Property Context As %DynamicObject [ Private ];
-
-Method OnBeforeOneTest() As %Status
-{
-  set baseUrl = ##class(Test.Forgery.Setup.Parameters).#TESTBASEURL
-  set ..Context = {
-    "Request": (##class(Forgery.CSP.Request).%New(baseUrl, "GET",, { "AppUrl": (baseUrl) })),
-    "Response": (##class(%CSP.Response).%New())
-  }
-
-  return $$$OK
-}
-
 Method TestInterceptionCycle()
 {
   set expectedContent = "intercepted messsage"
