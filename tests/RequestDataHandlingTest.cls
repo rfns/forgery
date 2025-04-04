@@ -72,10 +72,8 @@ Method TestConsumePayloadAsMimeDataIfHeaderIsSet()
 
 Method TestConsumeBinaryPayloadAsData()
 {
-  set binary = ##class(%Stream.FileBinary).%New()
-  do binary.LinkToFile("/usr/bin/file")
-
-  set payload = binary
+  set payload = ##class(%Stream.FileBinary).%New()
+  do payload.LinkToFile("/usr/bin/file")
   
   set request = ..CreateRequestWithDefaults(payload, "POST", "/")
 
