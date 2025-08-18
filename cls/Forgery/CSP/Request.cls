@@ -10,7 +10,7 @@ Method %OnNew(application As %String, resource As %String, httpMethod As %String
   return $$$OK
 }
 
-Method PickFromJar(jar As Forgery.Agent.CookieJar)
+Method PickFromJar(jar As Forgery.Internal.CookieJar)
 {
   do jar.PutCookiesInRequest($this)
 }
