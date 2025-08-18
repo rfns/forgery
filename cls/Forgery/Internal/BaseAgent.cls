@@ -25,36 +25,6 @@ Method %OnNew(configuration As Forgery.Configuration, requestDispatcherFactory A
   return $$$OK
 }
 
-Method Post(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Abstract ]
-{
-  $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Post"))
-}
-
-Method Get(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Abstract ]
-{
-  $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Get"))
-}
-
-Method Put(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Abstract ]
-{
-  $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Put"))
-}
-
-Method Delete(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Abstract ]
-{
-  $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Delete"))
-}
-
-Method Head(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Abstract ]
-{
-  $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Head"))
-}
-
-Method Patch(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) [ Abstract ]
-{
-  $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Patch"))
-}
-
 Method DoRequest(resource As %String, httpMethod As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Private ]
 {
   return ..RequestDispatcher.Dispatch(resource, httpMethod, data, overrides)
@@ -68,6 +38,11 @@ Method GetLastContext() As Forgery.CSP.Context
 Method GetLastReply() As %Stream.Object
 {
   return ..RequestDispatcher.GetLastReply()
+}
+
+Method NewFormData() As Forgery.IFormData
+{
+  return ##class(Forgery.FormData).%New()
 }
 
 }

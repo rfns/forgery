@@ -37,7 +37,7 @@ Method ConsumeQueryParameters(request As Forgery.CSP.Request) [ Private ]
   }
 }
 
-Method ConsumeData(request As Forgery.CSP.Request, data As %Any, overrides As %DynamicObject) As %Status [ Private ]
+Method ConsumeData(request As Forgery.CSP.Request, data As %RegisteredObject, overrides As %DynamicObject) As %Status [ Private ]
 {
   #define MethodAcceptsPayload $lf($lb("PUT", "POST", "PATCH"), request.Method)
 
@@ -45,12 +45,18 @@ Method ConsumeData(request As Forgery.CSP.Request, data As %Any, overrides As %D
     return $$$OK
   }
 
-  if overrides.headers.%Get("Content-Type") [ "multipart/form-data" {
-    do ..AppendToRequest(request, "mimedata", data)
+  if data.%Extends("Forgery.IFormData") {
+    do ConsumeFormData(data)
+    do request.SetHeader("Content-Type", "multipart/form-data")
   } elseif data.%IsA("%Stream.Object") {
-    set fileExtension = $piece(data.Filename, ".", *)
+    if data.%IsA("%Stream.FileCharacter") || data.%IsA("%Stream.FileBinary") {
+      set fileExtension = $piece(data.Filename, ".", *)
+    } else {
+      set fileExtension = "bin"
+    }
+
     do ##class(%CSP.StreamServer).FileClassify(fileExtension, .type)
-    
+        
     do request.SetHeader("Content-Type", type)
     do request.SetHeader("Content-Length", ..CalculateContentLength(data, type))
 
@@ -70,6 +76,12 @@ Method ConsumeData(request As Forgery.CSP.Request, data As %Any, overrides As %D
   }
 
   return $$$OK
+
+ConsumeFormData(formData)
+  set iterator = formData.GetEntryIterator()
+  while iterator.NextEntry(.entry) {
+    do request.InsertMimeData(entry.name, entry.value)
+  }
 }
 
 Method CalculateContentLength(stream As %Stream.FileCharacter, type As %String) As %String [ Private ]
@@ -95,7 +107,7 @@ Method CalculateContentLength(stream As %Stream.FileCharacter, type As %String) 
   return ""
 }
 
-Method AppendToRequest(request As Forgery.CSP.Request, settingName As %String, settingData As %Any, parentKey = "") [ Private ]
+Method AppendToRequest(request As Forgery.CSP.Request, settingName As %String, settingData As %Any, parentKey = "", depth As %Integer = 1) [ Private ]
 {
   if '$isobject(settingData) quit
   set iterator = settingData.%GetIterator()
@@ -105,15 +117,14 @@ Method AppendToRequest(request As Forgery.CSP.Request, settingName As %String, s
     if $isobject(val) {
       if val.%IsA("%DynamicObject") {
         do ..AppendToRequest(request, settingName, val)
-      } elseif val.%IsA("%DynamicArray") {
-        do ..AppendToRequest(request, settingName, val, key)
+      } elseif val.%IsA("%DynamicArray") && (depth = 1) {
+        do ..AppendToRequest(request, settingName, val, key, depth + 1)
       }
     } elseif parentKey '= "" {
       set appendToKeyName = parentKey
     }
     if settingName = "headers" { do request.SetHeader(appendToKeyName, val) }
     elseif settingName = "cookies" { do request.InsertCookie(appendToKeyName, val) }
-    elseif settingName = "mimedata" { do request.InsertMimeData(appendToKeyName, val) }
     elseif settingName = "queryparams" { do request.Insert(appendToKeyName, val) }
   }
 }

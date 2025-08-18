@@ -60,14 +60,29 @@ Method TestConsumeAuthorizationHeaderFromOverrides()
   do $$$AssertEquals(request.Authorization, "Basic blah blah blah")
 }
 
-Method TestConsumePayloadAsMimeDataIfHeaderIsSet()
+Method TestContentTypeIsSetAccordingToPayload()
 {
-  set payload = [{ "key": "value1" }, { "key": "value2" }, { "key": "value3" }]
-  set request = ..CreateRequestWithDefaults(payload, "POST", "/", { "headers": { "Content-Type": "multipart/form-data" } })
+  set payload1 = ##class(Forgery.FormData).%New()
+  set payload2 = ##class(%Stream.GlobalCharacter).%New()
 
-  do $$$AssertEquals(request.MimeData("key", 1), "value1")
-  do $$$AssertEquals(request.MimeData("key", 2), "value2")
-  do $$$AssertEquals(request.MimeData("key", 3), "value3")
+  set request1 = ..CreateRequestWithDefaults(payload1, "POST", "/")
+  set request2 = ..CreateRequestWithDefaults(payload2, "POST", "/")
+
+  do $$$AssertEquals(request1.ContentType, "multipart/form-data")
+  do $$$AssertEquals(request2.ContentType, "application/octet-stream")
+}
+
+Method TestHandleFormDataAsMimeData()
+{
+  set payload = ##class(Forgery.FormData).%New()
+
+  do payload.Append("key1", "value1")
+  do payload.Append("key2", "value2")
+
+  set request = ..CreateRequestWithDefaults(payload, "POST", "/")
+
+  do $$$AssertEquals(request.GetMimeData("key1"), "value1")
+  do $$$AssertEquals(request.GetMimeData("key2"), "value2")
 }
 
 Method TestConsumeBinaryPayloadAsData()

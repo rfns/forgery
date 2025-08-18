@@ -41,4 +41,9 @@ Method GetLastReply() As %Stream.Object
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "GetLastReply"))
 }
 
+Method NewFormData() As Forgery.IFormData
+{
+  $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "NewFormData"))
+}
+
 }

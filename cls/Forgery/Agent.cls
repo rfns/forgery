@@ -26,9 +26,4 @@ Method Head(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, 
   return ..DoRequest(..#HTTPHEADMETHOD, resource, queryParams, overrides)
 }
 
-Method SendMultipart(resource, formData As %DynamicArray, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
-{
-  return ..DoRequest(..#HTTPPOSTMETHOD, resource, formData, { "headers": { "Content-Type": "multipart/form-data" } })
-}
-
 }
