@@ -54,9 +54,8 @@ Method Dispatch(httpMethod As %String, resource As %String, data As %DynamicAbst
     set status = ex.AsStatus()
   }
 
-  $$$QuitOnError(dispatchHandler.OnDispose())
-  
   do ..DeviceInterceptor.EndInterception()
+  $$$QuitOnError(dispatchHandler.OnDispose())
 
   // Ensure we are back to the original namespace after the dispatch.
   set $namespace = ..InitialNamespace
