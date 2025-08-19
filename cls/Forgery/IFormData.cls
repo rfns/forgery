@@ -9,7 +9,7 @@ Method Append(key As %String, value As %Any) [ Abstract ]
 }
 
 /// Exposes object for iterating over every entry.
-Method GetEntryIterator() As %Iterator.Array
+Method GetEntryIterator() As Forgery.Internal.FormDataEntryIterator
 {
   $$$ThrowStatus($$$ERROR($$$MethodNotImplemented, "ToPlainObject"))
 }
