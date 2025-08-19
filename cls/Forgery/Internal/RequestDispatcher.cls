@@ -48,7 +48,7 @@ Method Dispatch(httpMethod As %String, resource As %String, data As %DynamicAbst
   try {
     do ..LastContext.Request.PickFromJar(..CookieJar)
     do ..DeviceInterceptor.StartInterception()
-    $$$ThrowOnError(dispatchHandler.OnDispatch(resource, httpMethod, appInfo.DispatchClass, ..LastContext))
+    $$$ThrowOnError(dispatchHandler.OnDispatch(resource, httpMethod, appInfo.DispatchClass, ..LastContext, ..DeviceInterceptor))
     do ..CookieJar.PutCookiesFromResponse(..LastContext.Response)
   } catch ex {
     set status = ex.AsStatus()
