@@ -9,7 +9,7 @@ Property ContextFactory As Forgery.CSP.ContextFactory [ Private ];
 
 Property LastContext As Forgery.CSP.Context [ Private ];
 
-Property WebApplicationResolver As Forgery.Internal.WebApplicationResolver [ Private ];
+Property RESTClassResolver As Forgery.Internal.RESTClassResolver [ Private ];
 
 Property DeviceInterceptor As Forgery.IO.DeviceInterceptor [ Private ];
 
@@ -17,10 +17,10 @@ Property ConfigurationMerger As Forgery.Internal.ConfigurationMerger [ Private ]
 
 Property CookieJar As Forgery.Internal.CookieJar [ Private ];
 
-Method %OnNew(configuration As Forgery.Configuration, resolver As Forgery.Internal.WebApplicationResolver, interceptor As Forgery.IO.DeviceInterceptor, jar As Forgery.Internal.CookieJar, cspContextFactory As Forgery.CSP.ContextFactory, configurationMerger As Forgery.Internal.ConfigurationMerger) As %Status
+Method %OnNew(configuration As Forgery.Configuration, resolver As Forgery.Internal.RESTClassResolver, interceptor As Forgery.IO.DeviceInterceptor, jar As Forgery.Internal.CookieJar, cspContextFactory As Forgery.CSP.ContextFactory, configurationMerger As Forgery.Internal.ConfigurationMerger) As %Status
 {
   set ..Configuration = configuration
-  set ..WebApplicationResolver = resolver
+  set ..RESTClassResolver = resolver
   set ..DeviceInterceptor = interceptor
   set ..CookieJar = jar
   set ..ContextFactory = cspContextFactory
@@ -33,7 +33,7 @@ Method Dispatch(httpMethod As %String, resource As %String, data As %DynamicAbst
 {
   #define SafeOverrides $select($isobject(overrides) : overrides, 1: {})
   
-  $$$QuitOnError(..WebApplicationResolver.Resolve(resource, .appInfo))
+  $$$QuitOnError(..RESTClassResolver.Resolve(resource, .appInfo))
 
   set mergedOverrides = ..ConfigurationMerger.Merge(
     $$$SafeOverrides,
