@@ -27,7 +27,7 @@ Method WithHeaders(headers As %DynamicObject = {{}}) As Forgery.AgentBuilder
   return $this
 }
 
-Method WithCookies(cookies As %DynamicArray) As %Status
+Method WithCookies(cookies As %DynamicArray) As Forgery.AgentBuilder
 {
   do ..Configuration.SetRequestDefaultCookies(cookies)
   return $this
