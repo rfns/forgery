@@ -22,7 +22,7 @@ Method PutCookiesFromResponse(response As %CSP.Response) As %Status
   }
 }
 
-Method PutCookiesInRequest(request As Forgery.Request) As %Status
+Method PutCookiesInRequest(request As Forgery.CSP.Request) As %Status
 {
   set name = ""
   set index = ""
