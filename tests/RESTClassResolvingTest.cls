@@ -1,4 +1,4 @@
-Class Test.Forgery.WebApplicationResolving Extends (%UnitTest.TestCase, Test.Forgery.Extensions.AssertiveStatus)
+Class Test.Forgery.RESTClassResolvingTest Extends (%UnitTest.TestCase, Test.Forgery.Extensions.AssertiveStatus)
 {
 
 Property BaseURL As %String [ InitialExpression = {##class(Test.Forgery.Setup.Parameters).#TESTBASEURL} ];
@@ -12,7 +12,7 @@ Method WithBaseURL(resource As %String)
 
 Method TestResolveAPIThroughUrl()
 {
-  set resolver = ##class(Forgery.Internal.WebApplicationResolver).%New(..BaseURL)
+  set resolver = ##class(Forgery.Internal.RESTClassResolver).%New(..BaseURL)
 
   do $$$AssertStatusOK(resolver.Resolve(..WithBaseURL("/hello"), .info))
   do $$$AssertEquals(info.DispatchClass, ..DispatchClass)
@@ -20,7 +20,7 @@ Method TestResolveAPIThroughUrl()
 
 Method TestGetErrorIfWebAppDoesntExist()
 {
-  set resolver = ##class(Forgery.Internal.WebApplicationResolver).%New("/invalid/app")
+  set resolver = ##class(Forgery.Internal.RESTClassResolver).%New("/invalid/app")
   do $$$AssertEquals(..MatchStatus(resolver.Resolve("/doesnt/exist", .info), "#5001: Web application resolver error: No application matching the url '/invalid/app/doesnt/exist' has been found."), 1)
 }
 

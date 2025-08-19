@@ -87,4 +87,13 @@ Method GetInterceptedContent() As %Stream.FileCharacter
   return ..DeviceContent
 }
 
+Method Flush() As %Status
+{
+  if '$data(%forgeryDeviceInterceptedStream) || '$isobject(%forgeryDeviceInterceptedStream) {
+    return $$$OK
+  }
+
+  return %forgeryDeviceInterceptedStream.Clear()
+}
+
 }

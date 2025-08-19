@@ -10,7 +10,7 @@ Method %OnNew(message As %String = "") As %Status
   return $$$OK
 }
 
-Method OnDispatch(resource As %String, httpMethod As %String, restDispatchClass As %String, cspContext As Forgery.CSP.Context) As %Status
+Method OnDispatch(resource As %String, httpMethod As %String, restDispatchClass As %String, cspContext As Forgery.CSP.Context, interceptor As Forgery.IO.DeviceInterceptor) As %Status
 {
   
   // Must publish these variables because of how %CSP.Page works.
