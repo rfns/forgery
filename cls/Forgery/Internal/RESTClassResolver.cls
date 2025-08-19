@@ -1,13 +1,13 @@
-Class Forgery.Internal.WebApplicationResolver Extends %RegisteredObject
+Class Forgery.Internal.RESTClassResolver Extends %RegisteredObject
 {
 
-Property BaseURL As %String [ Private ];
+Property WebApplication As %String [ Private ];
 
 Property URLMapCache As %DynamicObject [ Private ];
 
-Method %OnNew(baseUrl As %String) As %Status
+Method %OnNew(webApplication As %String) As %Status
 {
-  set ..BaseURL = baseUrl
+  set ..WebApplication = webApplication
   set ..URLMapCache = {}
   return $$$OK
 }
@@ -25,7 +25,7 @@ Method Resolve(url As %String, Output info As %DynamicObject = "") As %Status
   new $namespace
   set $namespace = "%SYS"
 
-  set baseUrl = ..BaseURL
+  set baseUrl = ..WebApplication
 
   if $extract(baseUrl, *) = "/" {
     set baseUrl = $extract(baseUrl, 1, *-1)
@@ -41,7 +41,7 @@ Method Resolve(url As %String, Output info As %DynamicObject = "") As %Status
     set info.Name = rows.%Get("Name")
     set info.DispatchClass = rows.%Get("DispatchClass")
     set info.Path = rows.%Get("Path")
-    set info.AppUrl = name_$select($extract(name, *) '= "/" : "/", 1: "")
+    set info.AppUrl = info.Name_$select($extract(info.Name, *) '= "/" : "/", 1: "")
   }
 
   if info.%Size() = 0 {

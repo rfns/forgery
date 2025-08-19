@@ -3,7 +3,7 @@ Class Forgery.Internal.RequestDispatcherFactory Extends %RegisteredObject
 
 ClassMethod CreateUsingConfiguration(configuration As Forgery.Configuration) As Forgery.Internal.RequestDispatcher
 {
-  set resolver = ##class(Forgery.Internal.WebApplicationResolver).%New(configuration.GetBaseURL())
+  set resolver = ##class(Forgery.Internal.RESTClassResolver).%New(configuration.GetWebApplication())
   set interceptor = ##class(Forgery.IO.DeviceInterceptor).%New(configuration.GetDeviceCharset(), configuration.GetDeviceLineTerminator())
   set jar = ##class(Forgery.Internal.CookieJar).%New()
   set cspContextFactory = ##class(Forgery.CSP.ContextFactory).%New()

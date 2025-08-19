@@ -8,7 +8,7 @@ Property Dispatcher As Forgery.Internal.RequestDispatcher;
 Method OnBeforeOneTest() As %Status
 {
   set ..Configuration = ##class(Forgery.Configuration).%New()
-  do ..Configuration.SetBaseURL(##class(Test.Forgery.Setup.Parameters).#TESTBASEURL)
+  do ..Configuration.SetWebApplication(##class(Test.Forgery.Setup.Parameters).#TESTBASEURL)
   do ..Configuration.SetDispatchHandler(##class(Test.Forgery.Setup.StubbedDispatchHandler).%New())
 
   set ..Dispatcher = ##class(Forgery.Internal.RequestDispatcherFactory).CreateUsingConfiguration(..Configuration)

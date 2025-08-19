@@ -1,7 +1,7 @@
 Class Forgery.Configuration Extends %RegisteredObject
 {
 
-Property BaseURL As %String [ Private ];
+Property WebApplication As %String [ Private ];
 
 Property DispatchHandler As Forgery.IDispatchHandler [ Private ];
 
@@ -13,15 +13,15 @@ Property RequestDefaultHeaders As %DynamicObject [ InitialExpression = {{}}, Pri
 
 Property RequestDefaultCookies As %DynamicArray [ InitialExpression = {[]}, Private ];
 
-Method SetBaseURL(baseURL As %String) As %Status
+Method SetWebApplication(webApplication As %String) As %Status
 {
-  set ..BaseURL = baseURL
+  set ..WebApplication = webApplication
   return $$$OK
 }
 
-Method GetBaseURL() As %String [ CodeMode = expression ]
+Method GetWebApplication() As %String [ CodeMode = expression ]
 {
-..BaseURL
+..WebApplication
 }
 
 Method SetDispatchHandler(handler As Forgery.IDispatchHandler) As %Status
@@ -83,7 +83,7 @@ Method Validate() As %Status
 {
   set status = $$$OK
 
-  if ..BaseURL = "" set status = $$$ADDSC(status, $$$ERROR($$$GeneralError, "Base URL is required."))
+  if ..WebApplication = "" set status = $$$ADDSC(status, $$$ERROR($$$GeneralError, "Web application name is required."))
   if '$isobject(..DispatchHandler) set status = $$$ADDSC(status, $$$ERROR($$$GeneralError, "Dispatch handler is required."))
   if '$isobject(..RequestDefaultHeaders) || '..RequestDefaultHeaders.%Extends("%DynamicObject") {
     set status = $$$ADDSC(status, $$$ERROR($$$GeneralError, "Request default headers must be an instance of %DynamicObject if provided."))

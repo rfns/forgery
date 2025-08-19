@@ -9,9 +9,9 @@ Method %OnNew() As %Status
   return $$$OK
 }
 
-Method SetBaseURL(url As %String) As Forgery.AgentBuilder
+Method SetWebApplication(webApplication As %String) As Forgery.AgentBuilder
 {
-  do ..Configuration.SetBaseURL(url)
+  do ..Configuration.SetWebApplication(webApplication)
   return $this
 }
 

@@ -1,11 +1,11 @@
 Class Forgery.CSP.Request Extends (%RegisteredObject, Forgery.CSP.AbstractRequestLike)
 {
 
-Method %OnNew(application As %String, resource As %String, httpMethod As %String) As %Status [ Private ]
+Method %OnNew(webApplication As %String, resource As %String, httpMethod As %String) As %Status [ Private ]
 {
   set ..URL = resource
   set ..Method = httpMethod
-  set ..Application = application
+  set ..Application = webApplication
   do ..LoadDefaultCgiEnvs()
   return $$$OK
 }

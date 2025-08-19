@@ -4,16 +4,16 @@ Class Test.Forgery.ConfigurationTest Extends (%UnitTest.TestCase, Test.Forgery.E
 Method TestValidateRequiredConfigs()
 {
   set configuration = ##class(Forgery.Configuration).%New()
-  do $$$AssertEquals(..MatchStatus(configuration.Validate(), "#5001: Configuration validation error: One or more settings are missing or wrong:", "#5001: BaseURL configuration is required.", "#5001: Dispatch handler is required."), 1)
+  do $$$AssertEquals(..MatchStatus(configuration.Validate(), "#5001: Configuration validation error: One or more settings are missing or wrong:", "#5001: WebApplication configuration is required.", "#5001: Dispatch handler is required."), 1)
 }
 
-Method TestCanSetAndGetBaseUrl()
+Method TestCanSetAndGetWebApplication()
 {
   set expectedUrl = "/testing/api"
   set config = ##class(Forgery.Configuration).%New()
 
-  do $$$AssertStatusOK(config.SetBaseURL(expectedUrl))
-  do $$$AssertEquals(config.GetBaseURL(), expectedUrl)
+  do $$$AssertStatusOK(config.SetWebApplication(expectedUrl))
+  do $$$AssertEquals(config.GetWebApplication(), expectedUrl)
 }
 
 Method TestSetAndGetDispatchHandler()
@@ -64,7 +64,7 @@ Method TestCanSetAndGetDefaultCookies()
 Method TestValidateInvalidHeaders()
 {
   set config = ##class(Forgery.Configuration).%New()
-  do config.SetBaseURL("/whatever")
+  do config.SetWebApplication("/whatever")
   do config.SetDispatchHandler(##class(Test.Forgery.Setup.StubbedDispatchHandler).%New("whatever"))
   
   do $$$AssertStatusOK(config.SetRequestDefaultHeaders([]))
@@ -74,7 +74,7 @@ Method TestValidateInvalidHeaders()
 Method TestValidateInvalidCookies()
 {
   set config = ##class(Forgery.Configuration).%New()
-  do config.SetBaseURL("/whatever")
+  do config.SetWebApplication("/whatever")
   do config.SetDispatchHandler(##class(Test.Forgery.Setup.StubbedDispatchHandler).%New("whatever"))
   
   do $$$AssertStatusOK(config.SetRequestDefaultCookies({}))
