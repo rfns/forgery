@@ -1,26 +1,25 @@
+/// Utility class for REST dispatch class discovery.
 Class Forgery.Internal.RESTClassResolver Extends %RegisteredObject
 {
 
+/// The provided web application name.
 Property WebApplication As %String [ Private ];
 
-Property URLMapCache As %DynamicObject [ Private ];
+Property WebApplicationInfoCache As %DynamicObject [ Private ];
 
-Method %OnNew(webApplication As %String) As %Status
+Method %OnNew(webApplication As %String, cache As %DynamicObject = {{}}) As %Status
 {
   set ..WebApplication = webApplication
-  set ..URLMapCache = {}
+  set ..WebApplicationInfoCache = cache
+
   return $$$OK
 }
 
 Method Resolve(url As %String, Output info As %DynamicObject = "") As %Status
 {
-  if ..URLMapCache.%IsDefined(url) {
-    set info = ..URLMapCache.%Get(url)
-    return $$$OK
+  if ..WebApplicationInfoCache.%Size() '= 0 {
+    return ..WebApplicationInfoCache
   }
-
-  do ..URLMapCache.%Set(url, {})
-  set info = ..URLMapCache.%Get(url)
 
   new $namespace
   set $namespace = "%SYS"
@@ -31,23 +30,23 @@ Method Resolve(url As %String, Output info As %DynamicObject = "") As %Status
     set baseUrl = $extract(baseUrl, 1, *-1)
   }
 
-  set result = {}
-  set name = ""
   set prefixedResource = baseUrl_$select($extract(url) '= "/" : "/"_url, 1: url)
 
   // Reverts the ordering to match longer names first.
   set rows = ##class(%SQL.Statement).%ExecDirect(, "SELECT TOP 1 Name, DispatchClass, Path FROM SECURITY.APPLICATIONS WHERE ? %STARTSWITH Name AND DispatchClass IS NOT NULL ORDER BY LEN(Name) DESC", prefixedResource)
   if rows.%Next() {
-    set info.Name = rows.%Get("Name")
-    set info.DispatchClass = rows.%Get("DispatchClass")
-    set info.Path = rows.%Get("Path")
-    set info.AppUrl = info.Name_$select($extract(info.Name, *) '= "/" : "/", 1: "")
+    set name = rows.%Get("Name")
+    set ..WebApplicationInfoCache.Name = rows.%Get("Name")
+    set ..WebApplicationInfoCache.DispatchClass = rows.%Get("DispatchClass")
+    set ..WebApplicationInfoCache.Path = rows.%Get("Path")
+    set ..WebApplicationInfoCache.AppUrl = name_$select($extract(name, *) '= "/" : "/", 1: "")
   }
 
-  if info.%Size() = 0 {
+  if ..WebApplicationInfoCache.%Size() = 0 {
     return $$$ERROR($$$GeneralError, $$$FormatText("Web application resolver error: No application matching the url '%1' has been found.", prefixedResource))
   }
 
+  set info = ..WebApplicationInfoCache
   return $$$OK
 }
 

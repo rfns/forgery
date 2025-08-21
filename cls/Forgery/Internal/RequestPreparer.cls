@@ -1,6 +1,8 @@
+/// An utility helper for heavy-lifiting the many approaches a request object can be filled.
 Class Forgery.Internal.RequestPreparer Extends %RegisteredObject
 {
 
+/// Takes a configuration, data object and mutates the request by filling it accordingly.
 Method Prepare(request As Forgery.CSP.Request, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject)
 {
  

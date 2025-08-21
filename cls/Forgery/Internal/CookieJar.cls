@@ -1,9 +1,14 @@
+/// Utility class for transporting cookie data from/to response and request objects respectively.
+/// 
+/// A stateful agent allows for two-phase operations to flow without manual intrusion from the caller.
+/// Like sending a request for auth and a second request with the cookie set for consuming data..
 Class Forgery.Internal.CookieJar Extends %RegisteredObject
 {
 
+/// The list that holds the cookies with the current operation context.
 Property Cookies As %String [ MultiDimensional ];
 
-/// testing
+/// Puts cookies from a response object into a request.
 Method PutCookiesFromResponse(response As %CSP.Response) As %Status
 {
   set index = ""

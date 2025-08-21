@@ -1,6 +1,11 @@
+/// Utility class used for merging multiple plain configuration-like objects.
+/// 
+/// The first object takes precedence over the next ones.
+/// This gives the caller control over what properties should remain in the final result.
 Class Forgery.Internal.ConfigurationMerger Extends %RegisteredObject
 {
 
+/// Merges n+1 objects into n and returns an aggregated result.
 ClassMethod Merge(configurations... As %DynamicObject) As %DynamicObject
 {
   #dim result As %DynamicObject
