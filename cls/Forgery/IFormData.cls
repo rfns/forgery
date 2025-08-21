@@ -8,10 +8,10 @@ Method Append(key As %String, value As %Any) [ Abstract ]
   $$$ThrowStatus($$$ERROR($$$MethodNotImplemented, "Append"))
 }
 
-/// Exposes object for iterating over every entry.
-Method GetEntryIterator() As Forgery.Internal.FormDataEntryIterator
+/// Exposes an object for iterating over every entry.
+Method GetEntryIterator() As Forgery.Internal.FormDataEntryIterator [ Abstract ]
 {
-  $$$ThrowStatus($$$ERROR($$$MethodNotImplemented, "ToPlainObject"))
+  $$$ThrowStatus($$$ERROR($$$MethodNotImplemented, "GetEntryIterator"))
 }
 
 }
