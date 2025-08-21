@@ -29,11 +29,12 @@ Method TestTransformDynamicObjectToContentStream()
 
 Method TestConsumeQueryParametersFromUrl()
 {
-  set request = ..CreateRequestWithDefaults("", "GET", "?q1=consume&q2=this&q3=message")
+  set request = ..CreateRequestWithDefaults("", "GET", "/query-params?q1=consume&q2=this&q3=message")
 
   do $$$AssertEquals(request.Get("q1"), "consume")
   do $$$AssertEquals(request.Get("q2"), "this")
   do $$$AssertEquals(request.Get("q3"), "message")
+  do $$$AssertEquals(request.URL, "/test/forgery/api/query-params")
 }
 
 Method TestConsumeQueryParametersFromDataWhenHTTPGET()

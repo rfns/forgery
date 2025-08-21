@@ -7,7 +7,6 @@ Method Prepare(request As Forgery.CSP.Request, data As %DynamicAbstractObject = 
   do ..AppendToRequest(request, "headers", overrides.headers)
   do ..AppendToRequest(request, "cookies", overrides.cookies)
 
-  do ..ConsumeQueryParameters(request)
   do ..ConsumeAuthorizationHeader(request, overrides)
 
   $$$QuitOnError(..ConsumeData(request, data, overrides))
@@ -24,23 +23,10 @@ Method ConsumeAuthorizationHeader(request As Forgery.CSP.Request, overrides As %
   }
 }
 
-Method ConsumeQueryParameters(request As Forgery.CSP.Request) [ Private ]
-{
-  if request.URL '[ "?" return
-  
-  set queryParts = $replace(request.URL, "?", "&")
-  for i=2:1:$length(queryParts, "&") {
-    set qp = $piece(queryParts, "&", i)
-    set qn = $piece(qp, "=", 1)
-    set qv = $piece(qp, "=", 2)
-    do request.Insert(qn, qv)
-  }
-}
-
 Method ConsumeData(request As Forgery.CSP.Request, data As %RegisteredObject, overrides As %DynamicObject) As %Status [ Private ]
 {
   #define MethodAcceptsPayload $lf($lb("PUT", "POST", "PATCH"), request.Method)
-
+  
   if '$isobject(data) {
     return $$$OK
   }

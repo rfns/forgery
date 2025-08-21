@@ -1,13 +1,43 @@
 Class Forgery.CSP.Request Extends (%RegisteredObject, Forgery.CSP.AbstractRequestLike)
 {
 
-Method %OnNew(webApplication As %String, resource As %String, httpMethod As %String) As %Status [ Private ]
+Property Resource As %String [ ReadOnly ];
+
+Method %OnNew(webApplication As %String, unformattedResource As %String, httpMethod As %String) As %Status [ Private ]
 {
-  set ..URL = resource
   set ..Method = httpMethod
   set ..Application = webApplication
+  do ..ConsumeQueryParameters(unformattedResource)
+  do ..NormalizeResource(unformattedResource)
   do ..LoadDefaultCgiEnvs()
   return $$$OK
+}
+
+Method ConsumeQueryParameters(unformattedResource As %String) [ Private ]
+{
+  if unformattedResource '[ "?" return
+  
+  set queryParts = $replace(unformattedResource, "?", "&")
+  for i=2:1:$length(queryParts, "&") {
+    set qp = $piece(queryParts, "&", i)
+    set qn = $piece(qp, "=", 1)
+    set qv = $piece(qp, "=", 2)
+    do ..Insert(qn, qv)
+  }
+}
+
+Method NormalizeResource(unformattedResource As %String) [ Private ]
+{
+  set ..URL = ..Application
+
+  set pathOnlyResource = $piece(unformattedResource, "?", 1)
+
+  if $extract(pathOnlyResource, 1) = "/" {
+    set pathOnlyResource = $extract(pathOnlyResource, 2, *)
+  }
+
+  set ..URL = ..Application_pathOnlyResource
+  set i%Resource = "/"_pathOnlyResource
 }
 
 Method PickFromJar(jar As Forgery.Internal.CookieJar)
