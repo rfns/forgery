@@ -3,8 +3,6 @@ Class Forgery.CSP.ContextFactory Extends %RegisteredObject
 
 Property Preparer As Forgery.Internal.RequestPreparer [ Private ];
 
-Property BaseUrl As %String [ Private ];
-
 Method %OnNew() As %Status
 {
   set ..Preparer = ##class(Forgery.Internal.RequestPreparer).%New()

@@ -24,7 +24,6 @@ Method OnDispatch(resource As %String, httpMethod As %String, restDispatchClass 
 
 Method OnDispose() As %Status
 {
-  break
   kill %request, %session, %response
   return $$$OK
 }

@@ -26,4 +26,9 @@ Method Head(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, 
   return ..DoRequest(..#HTTPHEADMETHOD, resource, queryParams, overrides)
 }
 
+Method Patch(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+{
+  return ..DoRequest(..#HTTPPATCHMETHOD, resource, data, overrides)
+}
+
 }
