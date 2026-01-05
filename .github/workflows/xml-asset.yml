@@ -25,33 +25,36 @@ jobs:
     - name: Convert line endings to LF (Unix format)
       run: find . -type f -exec dos2unix {} \;
     - name: Parse the tag
-      id: parse-tag
-      run:  echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      id: parse-metadata
+      run: |
+        export VERSION=${GITHUB_REF/refs\/tags\//}
+        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+        echo "REPOSITORY_NAME=$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")" >> $GITHUB_OUTPUT
+        echo "PACKAGE_NAME=$(echo "$REPOSITORY_NAME-$VERSION")" >> $GITHUB_OUTPUT        
     - name: Import this repository and generate XML artifacts
       run: |
-        touch $PWD/app/forgery.xml
-        chmod 777 $PWD/app/forgery.xml
+        touch "app/${{ steps.parse-metadata.outputs.REPOSITORY_NAME }}.xml"
+        chmod 777 "app/${{ steps.parse-metadata.outputs.REPOSITORY_NAME }}.xml"
         docker run --rm \
         -t --name xml-ci \
         -v $PWD/app:/opt/ci/app \
         -v $PWD/iris-ci-xml/ci/App/Installer.cls:/opt/ci/App/Installer.cls \
         -v $PWD/iris-ci-xml/ci/Runner.cls:/opt/ci/Runner.cls \
         -e PORT_CONFIGURATION_PROJECTNAME="forgery" \
-        -e PORT_CONFIGURATION_LOGLEVEL=1 \
+        -e PORT_CONFIGURATION_LOGLEVEL=2 \
         -e CI_XML_FLAGS="/exportversion=2016.2" \
-        rfns/iris-ci:0.6.1
-    - name: Retrieve the latest asset upload url
-      id: release-asset-metadata
+        ghcr.io/rfns/iris-ci/iris-ci:v0.6.5
+        mv "app/${{ steps.parse-metadata.outputs.REPOSITORY_NAME }}.xml" "app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}.xml"
+    - name: Calculate SHA1s
       run: |
-        upload_url=$(curl -s -X GET -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/$GITHUB_REPOSITORY/releases/latest | jq -r '. | .upload_url')
-        echo ::set-output name=UPLOAD_URL::$upload_url
-    - name: Upload release asset
-      id: release-asset-upload
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
+        sha1sum app/manifest.cls | cut -f 1 -d " " > app/manifest.sha1
+        sha1sum "app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}-iris.xml" | \
+        cut -f 1 -d " " > "app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}-iris.sha1"        
+    - name: Upload release files
+      id: release-files
+      uses: softprops/action-gh-release@v2
       with:
-        upload_url: ${{ steps.release-asset-metadata.outputs.UPLOAD_URL }}
-        asset_path: app/forgery.xml
-        asset_name: forgery-${{ steps.parse-tag.outputs.VERSION }}.xml
-        asset_content_type: application/xml
+        files: |
+          app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}.xml
+          app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}.sha1
+

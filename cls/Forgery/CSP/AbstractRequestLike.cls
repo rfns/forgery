@@ -1,4 +1,4 @@
-Class Forgery.Request Extends %RegisteredObject
+Class Forgery.CSP.AbstractRequestLike [ Abstract ]
 {
 
 Property URL As %String;
@@ -25,97 +25,6 @@ Property CgiEnvs As %String [ MultiDimensional ];
 
 Property Data As %String [ MultiDimensional ];
 
-Method %OnNew(url As %String, info As Forgery.Agent.ApplicationInfo, method As %String = "GET") As %Status [ Private ]
-{
-  set ..URL = url
-  set ..Method = method
-  set ..Content = ##class(%CSP.CharacterStream).%New()
-  set ..Application = info.AppUrl
-  do ..LoadDefaultCgiEnvs()
-  return $$$OK
-}
-
-ClassMethod NormalizeURL(url As %String) As %String [ Private ]
-{
-  set url = $select($extract(url, 1) '= "/" : "/"_url, 1: url)
-  set url = $piece(url, "?")
-  return url
-}
-
-ClassMethod CreateFromSettings(settings As %DynamicObject, appInfo As Forgery.Agent.ApplicationInfo) As Forgery.Request [ Internal ]
-{
-  set url = ..NormalizeURL(settings.url)
-  set request = ..%New(url, appInfo, settings.method)  
-
-  do request.AppendToRequest("headers", settings.headers)
-  do request.AppendToRequest("cookies", settings.cookies)
-
-  if settings.%IsDefined("headers") {
-    if settings.headers.%IsDefined("Authorization") {
-      set request.Authorization = settings.headers.Authorization
-    }
-  }
-
-  if settings.url [ "?" {
-    set queryParts = $replace(settings.url, "?", "&")
-    for i=2:1:$length(queryParts, "&") {
-      set qp = $piece(queryParts, "&", i)
-      set qn = $piece(qp, "=", 1)
-      set qv = $piece(qp, "=", 2)
-      do request.Insert(qn, qv)
-    }
-  }
-
-  if settings.%IsDefined("data") && $isobject(settings.data) {
-    if settings.headers.%Get("Content-Type") [ "multipart/form-data" {
-      do request.AppendToRequest("mimedata", settings.data)
-    } elseif settings.data.%IsA("%Stream.Object") {
-      if settings.data.IsCharacter() set content = ##class(%CSP.CharacterStream).%New()
-      else  set content = ##class(%CSP.BinaryStream).%New()
-      do content.CopyFrom(settings.data)
-    } elseif settings.data.%Extends("%DynamicAbstractObject") {
-      set content = ##class(%CSP.CharacterStream).%New()
-      do settings.data.%ToJSON(.content)
-      set request.Content = content
-      if settings.headers.%Get("Content-Type") '[ "application/json" {
-        do request.SetHeader("Content-Type", "application/json")
-      }
-    } else {
-      do request.AppendToRequest("queryparams", settings.data)
-    }
-  }
-
-  return request
-}
-
-Method PickFromJar(jar As Forgery.Agent.CookieJar)
-{
-  do jar.PutCookiesInRequest($this)
-}
-
-Method AppendToRequest(settingName, settingData, parentKey = "") [ Private ]
-{
-  if '$isobject(settingData) quit
-  set iterator = settingData.%GetIterator()
-
-  while iterator.%GetNext(.key, .val) {
-    set appendToKeyName = key
-    if $isobject(val) {
-      if val.%IsA("%DynamicObject") {
-        do ..AppendToRequest(settingName, val)
-      } elseif val.%IsA("%DynamicArray") {
-        do ..AppendToRequest(settingName, val, key)
-      }
-    } elseif parentKey '= "" {
-      set appendToKeyName = parentKey
-    }
-    if settingName = "headers" { do ..SetHeader(appendToKeyName, val) }
-    elseif settingName = "cookies" { do ..InsertCookie(appendToKeyName, val) }
-    elseif settingName = "mimedata" { do ..InsertMimeData(appendToKeyName, val) }
-    elseif settingName = "queryparams" { do ..Insert(appendToKeyName, val) }
-  }
-}
-
 Method AuthorizationSet(value As %String) As %Status [ Final ]
 {
   set i%CgiEnvs("HTTP_AUTHORIZATION") = value
@@ -132,37 +41,9 @@ Method ContentTypeSet(value As %String) As %Status [ Private ]
 
 Method ContentLengthSet(value As %String) As %Status [ Private ]
 {
-  set i%CgiEvs("CONTENT_LENGTH") = value
+  set i%CgiEnvs("CONTENT_LENGTH") = value
   set i%ContentLength = value
   return $$$OK
-}
-
-Method LoadDefaultCgiEnvs() [ Private ]
-{
-  do ##class(%Net.URLParser).Parse(..URL, .components)
-  do ParseQueryString(components("query"), .data)
-
-  merge i%Data = data
-
-  set i%CgiEnvs("REQUEST_METHOD") = $$$ucase(..Method)
-  set i%CgiEnvs("REQUEST_SCHEME") = "http"
-  set i%CgiEnvs("REQUEST_URI") = components("path")
-  set i%CgiEnvs("SERVER_NAME") = "localhost"
-  set i%CgiEnvs("SERVER_PORT") = 57772
-  set i%CgiEnvs("SERVER_PROTOCOL") = "HTTP/1.1"
-  set i%CgiEnvs("REMOTE_ADDR") = "localhost"
-
-ParseQueryString(qs, data)
-  if qs = "" quit
-
-  set qp = $lfs(qs, "&")
-
-  for i=1:1:$ll(qp) {
-    set key = $piece($lg(qp, i), "=", 1)
-    set value = $piece($lg(qp, i), "=", 2)
-    if key '= "" && (value '= "") set data(key, 1) = value
-  }
-  quit
 }
 
 // Most of the methods below are a copy from %CSP.Request, since we need to keep
@@ -357,4 +238,3 @@ Method NextIndex(name As %String, ByRef index As %Integer = "") As %String [ Fin
 }
 
 }
-

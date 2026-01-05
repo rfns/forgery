@@ -1,0 +1,34 @@
+name: Run unit and integration tests
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: ['master']
+    paths: ['cls/**/*.cls', 'tests/**/*.cls']
+
+jobs:
+  run_tests:
+    runs-on: ubuntu-latest
+    name: Run tests
+    steps:
+      - name: Clone this repository
+        uses: actions/checkout@v2
+        with:
+          path: app
+      - name: Install dos2unix
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dos2unix
+      - name: Convert line endings to LF (Unix format)
+        run: find . -type f -exec dos2unix {} \;
+      - name: Strip ROUTINE marks
+        run: app/bin/strip-atelier-headers.sh app
+      - name: Back-compatibilize with Cache
+        run: app/bin/iris-bc.sh app
+      - name: Import classes and run tests
+        run: |
+          docker run --rm -t --name test-ci \
+          -e TEST_SUITE="tests" \
+          -e TEST_AUTOLOAD_DIR="_setup" \
+          -v $PWD/app:/opt/ci/app ghcr.io/rfns/iris-ci/iris-ci:v0.6.5
+
