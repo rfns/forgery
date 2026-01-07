@@ -31,17 +31,27 @@ Method %OnNew(configuration As Forgery.Configuration, requestDispatcherFactory A
 }
 
 /// Shortcut method for concrete agents to dispatch requests without exposing the underlaying dispatcher helper.
-Method DoRequest(resource As %String, httpMethod As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Private ]
+Method DoRequest(resource As %String, httpMethod As %String, data As %RegisteredObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status [ Private ]
 {
   return ..RequestDispatcher.Dispatch(resource, httpMethod, data, overrides)
 }
 
-/// Shortcut method for retrieving the last operation context, on which operation stands for three CSP objects: request, response and session.
-/// 
-/// Please note that the behavior of these objects may slightly differ from their real implementations.
+/// Method for retrieving the last operation context, on which operation stands for three CSP objects: request, response and session.
 Method GetLastContext() As Forgery.CSP.Context
 {
   return ..RequestDispatcher.GetLastContext()
+}
+
+/// Retrieves the %CSP.Response generated with the last dispatch.
+Method GetLastResponse() As %CSP.Response
+{
+  return ..RequestDispatcher.GetLastContext().Response
+}
+
+/// Retrieves the %CSP.Request generated with the last dispatch.
+Method GetLastRequest() As Forgery.CSP.Request
+{
+  return ..RequestDispatcher.GetLastContext().Request
 }
 
 /// Retrieves the last reply sent back by the dispatch class.

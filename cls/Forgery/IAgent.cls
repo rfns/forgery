@@ -2,7 +2,7 @@ Class Forgery.IAgent [ Abstract ]
 {
 
 /// Sends a HTTP POST request to a web application resource.
-Method Post(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Post(resource As %String, data As %RegisteredObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Post"))
 }
@@ -14,7 +14,7 @@ Method Get(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, o
 }
 
 /// Sends a HTTP PUT request to a web application resource.
-Method Put(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Put(resource As %String, data As %RegisteredObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Put"))
 }
@@ -32,7 +32,7 @@ Method Head(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, 
 }
 
 /// Sends a HTTP PATCH request to a web application resource.
-Method Patch(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF})
+Method Patch(resource As %String, data As %RegisteredObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF})
 {
   $$$ThrowOnError($$$ERROR($$$MethodNotImplemented, "Patch"))
 }

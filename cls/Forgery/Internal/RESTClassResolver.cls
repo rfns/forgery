@@ -33,13 +33,14 @@ Method Resolve(url As %String, Output info As %DynamicObject = "") As %Status
   set prefixedResource = baseUrl_$select($extract(url) '= "/" : "/"_url, 1: url)
 
   // Reverts the ordering to match longer names first.
-  set rows = ##class(%SQL.Statement).%ExecDirect(, "SELECT TOP 1 Name, DispatchClass, Path FROM SECURITY.APPLICATIONS WHERE ? %STARTSWITH Name AND DispatchClass IS NOT NULL ORDER BY LEN(Name) DESC", prefixedResource)
+  set rows = ##class(%SQL.Statement).%ExecDirect(, "SELECT TOP 1 Name, DispatchClass, Path, Namespace FROM SECURITY.APPLICATIONS WHERE ? %STARTSWITH Name AND DispatchClass IS NOT NULL ORDER BY LEN(Name) DESC", prefixedResource)
   if rows.%Next() {
     set name = rows.%Get("Name")
     set ..WebApplicationInfoCache.Name = rows.%Get("Name")
     set ..WebApplicationInfoCache.DispatchClass = rows.%Get("DispatchClass")
     set ..WebApplicationInfoCache.Path = rows.%Get("Path")
     set ..WebApplicationInfoCache.AppUrl = name_$select($extract(name, *) '= "/" : "/", 1: "")
+    set ..WebApplicationInfoCache.Namespace = rows.%Get("NameSpace")
   }
 
   if ..WebApplicationInfoCache.%Size() = 0 {

@@ -21,6 +21,12 @@ Method UseDispatchHandler(handler As Forgery.IDispatchHandler) As Forgery.AgentB
   return $this
 }
 
+Method UseDefaultDispatchHandler(handler As Forgery.IDispatchHandler) As Forgery.AgentBuilder
+{
+  do ..Configuration.SetDispatchHandler(##class(Forgery.CSP.DefaultDispatchHandler).%New())
+  return $this
+}
+
 Method WithHeaders(headers As %DynamicObject = {{}}) As Forgery.AgentBuilder
 {
   do ..Configuration.SetRequestDefaultHeaders(headers)

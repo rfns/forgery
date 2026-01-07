@@ -62,7 +62,7 @@ Method Dispatch(httpMethod As %String, resource As %String, data As %DynamicAbst
   try {
     do ..LastContext.Request.PickFromJar(..CookieJar)
     do ..DeviceInterceptor.StartInterception()
-    $$$ThrowOnError(dispatchHandler.OnDispatch(..LastContext.Request.Resource, httpMethod, appInfo.DispatchClass, ..LastContext, ..DeviceInterceptor))
+    do ..DispatchRequest(dispatchHandler, httpMethod, appInfo)
     do ..CookieJar.PutCookiesFromResponse(..LastContext.Response)
   } catch ex {
     set status = ex.AsStatus()
@@ -71,9 +71,23 @@ Method Dispatch(httpMethod As %String, resource As %String, data As %DynamicAbst
   do ..DeviceInterceptor.EndInterception()
   $$$QuitOnError(dispatchHandler.OnDispose())
 
-  // Ensure we are back to the original namespace after the dispatch.
-  set $namespace = ..InitialNamespace
   return status
+}
+
+Method DispatchRequest(dispatchHandler As Forgery.IDispatchHandler, httpMethod As %String, appInfo As %DynamicObject)
+{
+  set sc = $$$OK
+  
+  try {
+    set $namespace = appInfo.Namespace
+    $$$ThrowOnError(dispatchHandler.OnDispatch(..LastContext.Request.Resource, httpMethod, appInfo.DispatchClass, ..LastContext, ..DeviceInterceptor))
+  } catch ex {
+    set sc = ex.AsStatus()
+  }
+
+  set $namespace = ..InitialNamespace
+  $$$ThrowOnError(sc)
+  return sc
 }
 
 /// Exposes the last context generated for the last request made.
