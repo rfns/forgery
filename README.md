@@ -10,13 +10,13 @@
 
 # How it works
 
-After retrieving the web application and dispatch class from the provided url. A device redirection is put in play to capture all the outputs coming from the dispatch class. The diagram below describes how the mimicked request is transferred to the actual dispatcher.
+You configure a new agent by specifying which web application should it point to and how the agent can reach the dispatch class. Then you use the agent's http verb-like methods to "fire" requests aiming the resources from that dispatch class, which I personally refer to them as _routers._
 
-![Forgery request flow](https://github.com/rfns/forgery/blob/master/docs/assets/forgery-requestflow.jpg?raw=true)
+If you ever used [Axios](https://axios-http.com/docs/intro), that's how close I'd put this utility as, but we take out the real HTTP protocol of the equation and mimick it as much as we need to make our routers work. The result is an agent that can reach router methods without network, which results on improved testing speed and remove license bottlenecks.
 
 ## Agent
 
-The Agent is responsible for mimicking a client that executes a request to the server. It's represented by the class `Forgery.Agent` which is composed by six shortcut methods:
+The Agent is responsible for mimicking a client that executes requests to the routers. It's represented by the class `Forgery.Agent` which is composed by six shortcut methods:
 
 * Post
 * Put
@@ -25,112 +25,132 @@ The Agent is responsible for mimicking a client that executes a request to the s
 * Options
 * Head
 
-Each method accepts a configuration that might looks similar to the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
-
 # Usage
 
-Calling a resource that replies to POST requests.
+Here's an example calling the Atelier API and retrieving the agent source code.
 
 ```objectscript
-set agent = ##class(Forgery.Agent).%New()
-set sc = agent.Post({
-  "url": "api/forgery/samples/echo",
-  "headers": {
-    "Content-Type": "application/json; charset=utf-8"
-  },
-  "data": {
-    "message": "Send me back"
-  }
-},
-.response,
-1, // Automatically outputs the response to the current device.
-)
-
-if $$$ISERR(sc) write "Received a server error: "_$System.Status.GetErrorText(sc)
-return $$$OK
+set builder = ##class(Forgery.AgentBuilder).%New()
+// NOTE: The name must match the web application, this is not simply a prefix.
+do builder.SetWebApplication("/api/atelier")
+// Use the internal %CSP.REST dispatch handler.
+do builder.UseDefaultDispatchHandler()
+// Any fired requests will be populated with this header beforehand.
+do builder.WithHeaders({ "Authorization": "Basic "_$System.Encryption.Base64Encode("username:password") })
+// You can check for misconfigurations here.
+$$$QuitOnError(builder.Build(.agent))
+do agent.Get("/v2/USER/doc/Forgery.Agent.cls")
+// Get the actual sever replied stream here.
+set reply = agent.GetLastReply()
+write reply.OutputToDevice()
 ```
+
+## Available HTTP verb-like methods
+
+* **Get**(_resource_ As %String, _queryParameters_ As %DynamicObject = "", _overrides_ As %DynamicObject = "")
+* **Post**(_resource_ As %String, _data_ As %RegisteredObject = "", _overrides_ As %DynamicObject = "")
+* **Put**(_resource_ As %String, _data_ As %RegisteredObject = "", _overrides_ As %DynamicObject = "")
+* **Patch**(_resource_ As %String, _data_ As %RegisteredObject = "", _overrides_ As %DynamicObject = "")
+* **Put**(_resource_ As %String, _data_ As %RegisteredObject = "", _overrides_ As %DynamicObject = "")
+* **Delete**(_resource_ As %String, _overrides_ As %DynamicObject = "")
+* **Head**(_resource_ As %String, _overrides_ As %DynamicObject = "")
+
+Where:
+
+* `resource` refers to the target resource path to fire the request to.
+* `data` is anything related to either: a %DynamicAbstractObject, a %Stream.Object or a FormData.
+* `overrides` is a dynamico object containg a `headers` and/or `cookies` that configure the request headers.
+
+Meaning:
+
+* A _FormData_ is an instance of `agent.NewFormata()`.
+* The `cookies` is a dynamic array of dynamic objects where each object is composed by a single key-value non negotiable. e.g. `[{ "key": "value" }, { "key": "value2" }]`
+* The `headers` is a dynamic object composed by properties the refer to actual request headers. e.g. `{ "Content-Type": "application/json", "Authorization": "Bearer blah" }`
+
+## Using the FormData
+
+When you need to provide data to `%request.MimeData` you must use use a FormData instance. After your FormData is filled with the data you require, you provide it to the agent like so:
+
+```objectscript
+ set formData = agent.NewFormData()
+ do formData.Append("key", "value") // You CAN repeat the key just like you would with a real form data object.
+ do agent.Post("/some/resource", formData)
+```
+
+## Sending a stream
+
+If for some reason you need to send a stream like a binary or a plain text file, you provide an instance of something that inherits from %Stream.Object:
+
+```objectscript
+set binaryFile = ##class(%Stream.FileBinary).%New()
+do binary.LinkToFile("/some/binary/file.bin")
+do agent.Post("/some/resource", binaryFile)
+```
+
+You'll find that stream allocated on `%request.Content`.
 
 ## Default settings
 
-You can also provide an object with the following default settings:
+You can use default settings if you find yourself repeating request headers or cookies too often.
+These settings can be configured with the builder:
 
-* `baseURL`: A prefix for a URL path.
-* `defaultHeaders`: An object hash of header name and values.
+* **WithHeaders**(_overrides_ As %DynamicObject): This sets the headers to be sent on every request.
+* **WithCookies**(cookies As %DynamicArray): This sets the cookies to be sent on every request.
 
-```objectscript
-set agent = ##class(Forgery.Agent).%New({
- "baseURL": "/my/web/app/name",
- "headers": {
-    "Content-Type": "application/json; charset=utf-8"
- }
-})
+> :warning: NOTE: While in theory you could use WithHeaders to set cookies as well, you might be subjected to unexpected behaviors so stick with each method instead.
 
-// Any requests that begins with `agent` will be using the default configuration.
-set sc = agent.Get("/", .response)
-```
+## Context: request, response, session and reply
 
-## Response and CSP Response
+Every request the agent executes will generate a context object. This is object is composed by instances of %CSP.Response, %CSP.Session and a request-like object.
+The "request-like" is due to some restrictions imposed by the original %CSP.Request contract, such as private methods that are vital to Forgery's operation, so
+we have something that looks like a %CSP.Request.
 
-You can also retrieve the last response and %CSP.Response instance:
+You can get all three objects like so:
 
 ```objectscript
-// This returns the last reply sent by the "server".
-set response = agent.GetLastResponse()
-
-// And this is how the %response object has been filled.
-set %response = agent.GetLastCSPResponse()
+set response = agent.GetLastResponse() // %CSP.Response
+set request = agent.GetLastRequest() // %CSP.Request
+set reply = agent.GetLastReply() // %Stream.Object
 ```
 
-Retrieving the %CSP.Response object allows you to execute fine-grained assertions.
+You can also retrieve the whole context object if you prefer, the methods above are just shorcuts:
+
+```objectscript
+set context = agent.GetLastContext()
+```
+
 ## About the Jar
 
-The cookie Jar is a memory store managed by the agent. It uses the jar to store any cookies from the CSP response object. This allows the agent to re-use these cookies without the developer having to hard code it every request. In addition, the jar is protected from external tampering in order to provide a safe environment to simulate httpOnly cookies.
+The cookie Jar is a in-memory storage managed by the agent that mimicks the browser cookie storage. It uses the jar to store any cookies from the CSP response object. This allows the agent to keep state between requests, such as executing an authentication request and then accessing a private resource. While for testing this is not ideal, for request debugging it's worth using.
 
-Although the jar stores cookies from multiple requests, the agent will pick only the ones that are relevant to the URL and each cookie's Path attribute (if present).
+## Dispatch handlers
 
-# Troubleshooting
+Dispatch handlers are adapters that help Forgery negotiate the request with the actual web application's dispatch class (router). By default Forgery comes with a dispatch handler for handling %CSP.REST routers, but you can also create your own if you need to. In order to do so, make sure you have the following boilerplate class in place:
 
-### _I provided a URL but it's not finding my dispatch class?_
-
-Since you're not actually hitting your web server, you only need to provide the path that
-ressembles your web application's name/path onwards. Do not provide the hostname, protocol or any path that comes before the web application name.
-
-### _My application uses custom cookies and I tried setting them using the Set-Cookies header but to no avail?_
-
-There are two ways of doing this:
-
-1. Since multiple cookies with the same name can be set, I decided to dedicate a setting for it: by using the `cookies` setting, which receives a key-value object or an array of values for each named key.
-
-2. By reusing the agent for subsequent request, this way the previous request will have set the cookie, which is good to simulate working with _httpOnly_ cookies.
-
-If you need to set cookies don't use the `Set-Cookies`, because the dispatch class won't know from where to read it.
-
-### _What if my application uses a token-based approach?_
-
-You can simulate authenticated request by providing an `Authorization` header inside the `headers` object.
-
-### _I want to try sending a file, but I have no idea from where to begin!_
-
-You can simulate FormData requests by using the `mimedata` setting. Just pass out a file stream to a key-valued object and you'll be done. e.g.:
-
-```
+```objectscript
+Class User.MyDispatchHandler Extends (%RegisteredObject, Forgery.IDispatchHandler)
 {
-  "mimedata": {
-    "my_file_key": (myFileStream)
-  }
+
+Method OnDispatch(resource As %String, httpMethod As %String, restDispatchClass As %String, cspContext As Forgery.CSP.Context, interceptor As Forgery.IO.DeviceInterceptor) As %Status
+{
+
 }
 
+Method OnDispose() As %Status
+{
+
+}
+
+}
 ```
 
-If you need to repeat the name, you can provide a `%DynamicArray` of streams for that name instead.
+You can check the class `Forgery.CSP.DefaultDispatchHandler` for a concrete example.
 
-# Known issues
+After you create it, you can provide this adapter at the building phase:
 
-The following situations are known issues. If you have any ideas on how to fix it, please let me know:
-
-* Methods that call APIs to generate files (like handling uploads) will mostly like fail, this is due to the redirection required to capture the content being written, which in turn conflicts with the device change required to write files. The current workaround is to ignore the file generation and check if the request handler method completed without issues.
-
-* Some dispatch classes like the one that exposes the Atelier API will result into an odd response: they'll mix the success and error objects. I'm still trying to figure what is causing that.
+```objectscript
+do builder.UseDispatchHandler(##class(User.MyDispatchHandler).%New())
+```
 
 ## CONTRIBUTING
 
