@@ -1,4 +1,4 @@
-Class Forgery.CSP.BasicDispatchHandler Extends (%RegisteredObject, Forgery.IDispatchHandler)
+Class Forgery.CSP.DefaultDispatchHandler Extends (%RegisteredObject, Forgery.IDispatchHandler)
 {
 
 Method OnDispatch(resource As %String, httpMethod As %String, restDispatchClass As %String, cspContext As Forgery.CSP.Context, interceptor As Forgery.IO.DeviceInterceptor) As %Status

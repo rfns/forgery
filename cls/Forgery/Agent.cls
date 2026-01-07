@@ -6,7 +6,7 @@ Class Forgery.Agent Extends (%RegisteredObject, Forgery.Internal.BaseAgent)
 {
 
 /// Sends a HTTP POST request to a web application resource.
-Method Post(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Post(resource As %String, data As %RegisteredObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
   return ..DoRequest(..#HTTPPOSTMETHOD, resource, data, overrides)
 }
@@ -18,7 +18,7 @@ Method Get(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, o
 }
 
 /// Sends a HTTP PUT request to a web application resource.
-Method Put(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Put(resource As %String, data As %RegisteredObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
   return ..DoRequest(..#HTTPPUTMETHOD, resource, data, overrides)
 }
@@ -36,7 +36,7 @@ Method Head(resource As %String, queryParams As %DynamicObject = {$$$NULLOREF}, 
 }
 
 /// Sends a HTTP Patch request to a web application resource.
-Method Patch(resource As %String, data As %DynamicAbstractObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
+Method Patch(resource As %String, data As %RegisteredObject = {$$$NULLOREF}, overrides As %DynamicObject = {$$$NULLOREF}) As %Status
 {
   return ..DoRequest(..#HTTPPATCHMETHOD, resource, data, overrides)
 }
