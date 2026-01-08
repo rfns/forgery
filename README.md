@@ -36,7 +36,7 @@ do builder.SetWebApplication("/api/atelier")
 // Use the internal %CSP.REST dispatch handler.
 do builder.UseDefaultDispatchHandler()
 // Any fired requests will be populated with this header beforehand.
-do builder.WithHeaders({ "Authorization": "Basic "_$System.Encryption.Base64Encode("username:password") })
+do builder.WithHeaders({ "Authorization": ("Basic "_$System.Encryption.Base64Encode("username:password")) })
 // You can check for misconfigurations here.
 $$$QuitOnError(builder.Build(.agent))
 do agent.Get("/v2/USER/doc/Forgery.Agent.cls")
