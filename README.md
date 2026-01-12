@@ -59,7 +59,7 @@ Where:
 
 * `resource` refers to the target resource path to fire the request to.
 * `data` is anything related to either: a %DynamicAbstractObject, a %Stream.Object or a FormData.
-* `overrides` is a dynamico object containg a `headers` and/or `cookies` that configure the request headers.
+* `overrides` is a dynamic object containg a `headers` and/or `cookies` that configure the request headers.
 
 Meaning:
 
