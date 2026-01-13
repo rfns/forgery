@@ -44,17 +44,11 @@ jobs:
         -e PORT_CONFIGURATION_LOGLEVEL=2 \
         -e CI_XML_FLAGS="/exportversion=2016.2" \
         ghcr.io/rfns/iris-ci/iris-ci:v0.6.5
-        mv "app/${{ steps.parse-metadata.outputs.REPOSITORY_NAME }}.xml" "app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}.xml"
-    - name: Calculate SHA1s
-      run: |
-        sha1sum app/manifest.cls | cut -f 1 -d " " > app/manifest.sha1
-        sha1sum "app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}-iris.xml" | \
-        cut -f 1 -d " " > "app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}-iris.sha1"        
+        mv "app/${{ steps.parse-metadata.outputs.REPOSITORY_NAME }}.xml" "app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}-${{ steps.parse-metadata.outputs.VERSION }}.xml"
     - name: Upload release files
       id: release-files
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}.xml
-          app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}.sha1
+          app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}-${{ steps.parse-metadata.outputs.VERSION }}.xml
 
