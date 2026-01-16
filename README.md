@@ -51,7 +51,6 @@ write reply.OutputToDevice()
 * **Post**(_resource_ As %String, _data_ As %RegisteredObject = "", _overrides_ As %DynamicObject = "")
 * **Put**(_resource_ As %String, _data_ As %RegisteredObject = "", _overrides_ As %DynamicObject = "")
 * **Patch**(_resource_ As %String, _data_ As %RegisteredObject = "", _overrides_ As %DynamicObject = "")
-* **Put**(_resource_ As %String, _data_ As %RegisteredObject = "", _overrides_ As %DynamicObject = "")
 * **Delete**(_resource_ As %String, _overrides_ As %DynamicObject = "")
 * **Head**(_resource_ As %String, _overrides_ As %DynamicObject = "")
 
