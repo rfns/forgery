@@ -69,7 +69,7 @@ Meaning:
 
 ## Using the FormData
 
-When you need to provide data to `%request.MimeData` you must use use a FormData instance. After your FormData is filled with the data you require, you provide it to the agent like so:
+When you need to provide data to `%request.MimeData` you must use a FormData instance. After your FormData is filled with the data you require, you provide it to the agent like so:
 
 ```objectscript
  set formData = agent.NewFormData()
