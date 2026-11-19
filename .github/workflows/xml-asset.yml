@@ -1,54 +1,43 @@
-name: Create XML release asset
+name: Create XML release assets
 
 on:
   release:
     types: [published]
+  # Lets a release be rebuilt without cutting a new tag, which is what the next
+  # expired base image will call for.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Existing tag to build the assets from"
+        required: true
+        type: string
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
+    name: Export and attach the XML assets
     steps:
-    - name: Clone this repository
-      uses: actions/checkout@v2
-      with:
-        path: app
-    - name: Clone IRIS-CI-XML
-      uses: actions/checkout@v2
-      with:
-        path: iris-ci-xml
-        repository: rfns/iris-ci-xml
-    - name: Install dos2unix
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y dos2unix
-    - name: Convert line endings to LF (Unix format)
-      run: find . -type f -exec dos2unix {} \;
-    - name: Parse the tag
-      id: parse-metadata
-      run: |
-        export VERSION=${GITHUB_REF/refs\/tags\//}
-        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
-        echo "REPOSITORY_NAME=$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")" >> $GITHUB_OUTPUT
-        echo "PACKAGE_NAME=$(echo "$REPOSITORY_NAME-$VERSION")" >> $GITHUB_OUTPUT        
-    - name: Import this repository and generate XML artifacts
-      run: |
-        touch "app/${{ steps.parse-metadata.outputs.REPOSITORY_NAME }}.xml"
-        chmod 777 "app/${{ steps.parse-metadata.outputs.REPOSITORY_NAME }}.xml"
-        docker run --rm \
-        -t --name xml-ci \
-        -v $PWD/app:/opt/ci/app \
-        -v $PWD/iris-ci-xml/ci/App/Installer.cls:/opt/ci/App/Installer.cls \
-        -v $PWD/iris-ci-xml/ci/Runner.cls:/opt/ci/Runner.cls \
-        -e PORT_CONFIGURATION_PROJECTNAME="forgery" \
-        -e PORT_CONFIGURATION_LOGLEVEL=2 \
-        -e CI_XML_FLAGS="/exportversion=2016.2" \
-        ghcr.io/rfns/iris-ci/iris-ci:v0.6.5
-        mv "app/${{ steps.parse-metadata.outputs.REPOSITORY_NAME }}.xml" "app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}-${{ steps.parse-metadata.outputs.VERSION }}.xml"
-    - name: Upload release files
-      id: release-files
-      uses: softprops/action-gh-release@v2
-      with:
-        files: |
-          app/${{ steps.parse-metadata.outputs.PACKAGE_NAME }}-${{ steps.parse-metadata.outputs.VERSION }}.xml
+      - name: Clone this repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version || github.ref_name }}
 
+      - name: Resolve the version
+        id: metadata
+        run: echo "VERSION=${{ inputs.version || github.ref_name }}" >> $GITHUB_OUTPUT
+
+      # Produces both flavours: one for IRIS and one for Caché, the latter from
+      # sources that bin/iris-bc.sh rewrote. See the script for why a single
+      # artifact cannot serve both.
+      - name: Export the XML assets
+        run: bin/export-xml.sh "${{ steps.metadata.outputs.VERSION }}" dist
+
+      - name: Attach the assets to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.metadata.outputs.VERSION }}
+          files: |
+            dist/forgery-${{ steps.metadata.outputs.VERSION }}-iris.xml
+            dist/forgery-${{ steps.metadata.outputs.VERSION }}-iris.sha1
+            dist/forgery-${{ steps.metadata.outputs.VERSION }}.xml
+            dist/forgery-${{ steps.metadata.outputs.VERSION }}.sha1
