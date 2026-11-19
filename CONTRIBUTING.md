@@ -37,3 +37,28 @@ fullfiling the requirements above.
 * Two spaces.
 * English only, though localized documentation is more than welcome.
 * New features should preferably be tested with unit tests.
+
+## Staying loadable on Caché
+
+Every release ships two artifacts, and the one without a suffix is exported from
+sources that `bin/iris-bc.sh` rewrote. That script covers the mechanical
+differences — `%Any`, `%Storage.Persistent`, `[ Language = objectscript ]` — but
+not the behavioural ones.
+
+The one that keeps biting: **Caché does not honour an `InitialExpression` of
+`{}` or `[]` on a dynamic property.** It compiles, and the property then holds a
+`NULLOREF` at runtime, so the failure surfaces far from its cause. Initialise
+dynamic properties in `%OnNew` instead:
+
+```objectscript
+Property Headers As %DynamicObject [ Private ];
+
+Method %OnNew() As %Status [ Private, ServerOnly = 1 ]
+{
+  set ..Headers = {}
+  return $$$OK
+}
+```
+
+Scalar initial expressions are fine; this is specific to dynamic objects and
+arrays.

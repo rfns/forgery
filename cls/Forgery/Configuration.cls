@@ -9,9 +9,20 @@ Property DeviceLineTerminator As %String [ InitialExpression = {$char(13,10)}, P
 
 Property DeviceCharset As %String [ InitialExpression = "utf-8", Private ];
 
-Property RequestDefaultHeaders As %DynamicObject [ InitialExpression = {{}}, Private ];
+Property RequestDefaultHeaders As %DynamicObject [ Private ];
 
-Property RequestDefaultCookies As %DynamicArray [ InitialExpression = {[]}, Private ];
+Property RequestDefaultCookies As %DynamicArray [ Private ];
+
+/// Caché does not honour an InitialExpression of {} or [] on a dynamic
+/// property, which leaves it holding a NULLOREF. Validate() then rejects the
+/// configuration for headers and cookies the caller never had to provide, and
+/// the agent cannot be built at all. Initialising here works on both platforms.
+Method %OnNew() As %Status [ Private, ServerOnly = 1 ]
+{
+  set ..RequestDefaultHeaders = {}
+  set ..RequestDefaultCookies = []
+  return $$$OK
+}
 
 Method SetWebApplication(webApplication As %String) As %Status
 {
