@@ -30,5 +30,10 @@ jobs:
           docker run --rm -t --name test-ci \
           -e TEST_SUITE="tests" \
           -e TEST_AUTOLOAD_DIR="_setup" \
-          -v $PWD/app:/opt/ci/app ghcr.io/rfns/iris-ci/iris-ci:v0.6.5
+          # iris2026 instead of a pinned version: the Community licence inside
+          # the image expires about a year after its IRIS release, so a pinned
+          # tag eventually stops starting. This one keeps the platform fixed —
+          # a future IRIS will not silently change what the tests run on — while
+          # pointing at a rebuilt, licensed image.
+          -v $PWD/app:/opt/ci/app ghcr.io/rfns/iris-ci/iris-ci:iris2026
 
