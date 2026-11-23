@@ -25,15 +25,18 @@ jobs:
         run: app/bin/strip-atelier-headers.sh app
       - name: Back-compatibilize with Cache
         run: app/bin/iris-bc.sh app
-      # iris2026 instead of a pinned version: the Community licence inside the
-      # image expires about a year after its IRIS release, so a pinned tag
-      # eventually stops starting. This one keeps the platform fixed — a future
-      # IRIS will not silently change what the tests run on — while pointing at
-      # a rebuilt, licensed image.
+      # Pinned back to v0.6.5 (2025 build). The floating iris2026 tag — and
+      # every other tag from that same release (v0.6.6, v0.7.0, latest,
+      # *-iris2026) — is listed in the GHCR tag list but 404s when the
+      # manifest is actually fetched: a ghost tag pointing at content that no
+      # longer exists in the registry. Confirmed against the registry API
+      # directly, not just this workflow. v0.6.5 is the newest tag that still
+      # resolves. Revert to iris2026 once rfns/iris-ci republishes a working
+      # 2026 image.
       - name: Import classes and run tests
         run: |
           docker run --rm -t --name test-ci \
           -e TEST_SUITE="tests" \
           -e TEST_AUTOLOAD_DIR="_setup" \
-          -v $PWD/app:/opt/ci/app ghcr.io/rfns/iris-ci/iris-ci:iris2026
+          -v $PWD/app:/opt/ci/app ghcr.io/rfns/iris-ci/iris-ci:v0.6.5
 
