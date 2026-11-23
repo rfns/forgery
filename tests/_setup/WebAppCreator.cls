@@ -17,11 +17,11 @@ ClassMethod CreateProjection() As %Status
     return $$$OK
   }
 
-  set webApp = ##class(Security.Applications).%New(..#TESTBASEURL)
+  set webApp = ##class(Security.Applications).%New()
   set webApp.Name = ..#TESTBASEURL
   set webApp.DispatchClass = ..#TESTDISPATCHCLASS
   set webApp.CookiePath = ..#TESTBASEURL
-  set webApp.NameSpace = "DEV"
+  set webApp.NameSpace = "USER"
   set webApp.UseCookies = 2
   set webApp.Recurse = 1
   set webApp.Type = 2
