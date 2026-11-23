@@ -74,7 +74,7 @@ Method Dispatch(httpMethod As %String, resource As %String, data As %DynamicAbst
   return status
 }
 
-Method DispatchRequest(dispatchHandler As Forgery.IDispatchHandler, httpMethod As %String, appInfo As %DynamicObject)
+Method DispatchRequest(dispatchHandler As Forgery.IDispatchHandler, httpMethod As %String, appInfo As %DynamicObject) [ Private ]
 {
   set sc = $$$OK
   

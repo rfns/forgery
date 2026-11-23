@@ -8,8 +8,9 @@ Method OnDispatch(resource As %String, httpMethod As %String, restDispatchClass 
   set %session = context.Session
 
   set %frontier = ##class(Frontier.Context).%New(%session, %request, %response)
+  set fullQualifiedResource = $$$FormatText("%1%2", $extract(context.Request.Application, 1, *-1), resource)
 
-  $$$ThrowOnError($classmethod(restDispatchClass, "HandleRequest", resource, httpMethod))
+  $$$ThrowOnError($classmethod(restDispatchClass, "HandleRequest", fullQualifiedResource, httpMethod))
   return $$$OK
 }
 
