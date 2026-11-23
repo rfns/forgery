@@ -68,11 +68,7 @@ rchr(time) Quit ""
 
 Method EndInterception() As %Status [ ProcedureBlock = 0 ]
 {
-  if ..DeviceMnemonic '= "" && (..DeviceMnemonic '= "%X364") {
-    use ..OriginalDevice::("^"_..DeviceMnemonic)
-  } else {
-    use ..OriginalDevice
-  }
+  do ..RestoreOriginalDevice()
 
   kill %forgeryDeviceInterceptedStream
 
@@ -80,6 +76,37 @@ Method EndInterception() As %Status [ ProcedureBlock = 0 ]
   if ..DevicePreviouslyRedirected '= 1 do ##class(%Device).ReDirectIO($$$NO)
 
   return $$$OK
+}
+
+/// Restores the device captured before interception started. Under Cache,
+/// running via csession with output piped (e.g. a CI container), the device
+/// snapshotted at construction time stops being reopenable by name once
+/// mnemonic redirection has been toggled on it, and the restore fails with
+/// <NOTOPEN>. $principal always resolves back to the process's real device
+/// regardless of how it got there, so it's used as a fallback instead of
+/// letting the whole dispatch fail.
+Method RestoreOriginalDevice() [ Private, ProcedureBlock = 0 ]
+{
+  set hasMnemonic = (..DeviceMnemonic '= "") && (..DeviceMnemonic '= "%X364")
+  set restored = 0
+
+  try {
+    if hasMnemonic {
+      use ..OriginalDevice::("^"_..DeviceMnemonic)
+    } else {
+      use ..OriginalDevice
+    }
+    set restored = 1
+  } catch {
+  }
+
+  if restored return
+
+  if hasMnemonic {
+    use $principal::("^"_..DeviceMnemonic)
+  } else {
+    use $principal
+  }
 }
 
 Method GetInterceptedContent() As %Stream.FileCharacter
